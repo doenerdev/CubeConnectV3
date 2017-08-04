@@ -1,0 +1,327 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading.Tasks;
+using Firebase;
+using Firebase.Database;
+using Firebase.Storage;
+using Firebase.Unity.Editor;
+using UnityEngine;
+
+public class FirebaseManager : Singleton<FirebaseManager> {
+
+    public FirebaseAuthentication fbAuth;
+    public LevelBrowserSortCategory SortCategory;
+    public LevelBrowserSortType SortType;
+    public string StartIndex;
+    public int Range = 2;
+
+    private bool loaded = false;
+    private System.IO.Stream stream;
+
+    // Use this for initialization
+    void Awake()
+    {
+        /*
+        UserGeneratedLevelData levelData = new UserGeneratedLevelData(4);
+        StageAndLevelDataManager.Instance.AddUserGeneratedLevel(levelData);
+        StageAndLevelDataManager.Instance.SaveUserGeneratedLevelDataHolder();
+
+        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolder(GameManager.Instance.UserLevelsDataPath);*/
+        base.Awake();
+        FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
+        "https://qube-4b14f.firebaseio.com/");
+
+        DontDestroyOnLoad(this);
+        Debug.Log("Done Firebase");
+
+    }
+
+    public void FirebaseConnectionChanged(object sender, ValueChangedEventArgs e)
+    {
+        Debug.Log(e.Snapshot.Value);
+    }
+
+    public void UploadUserGeneratedLevel(UserGeneratedLevelData levelData)
+    {
+        byte[] custom_bytes = null;
+        FirebaseStorage storage = FirebaseStorage.DefaultInstance;
+        var data_ref_url = "gs://qube-4b14f.appspot.com/user-generated-levels/" + levelData.LevelName + "bla" + ".lvl";
+        StorageReference data_ref = storage.GetReferenceFromUrl(data_ref_url);
+
+        BinaryFormatter bf = new BinaryFormatter();
+        using (var ms = new MemoryStream())
+        {
+            bf.Serialize(ms, levelData);
+            custom_bytes = ms.ToArray();
+        }
+
+        var level_metadata = new Firebase.Storage.MetadataChange
+        {
+            CustomMetadata = new Dictionary<string, string>
+            {
+                {"difficulty", levelData.Difficulty.ToString()},
+                {"rating", "0"},
+                { "qtyRatings", levelData.QtyRatings.ToString()},
+                { "levelName", levelData.LevelName}
+            }
+        };
+
+        // Upload the file to the path "images/rivers.jpg"
+        data_ref.PutBytesAsync(custom_bytes, level_metadata).ContinueWith((Task<StorageMetadata> task) => {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                Debug.Log(task.Exception.ToString());
+                // Uh-oh, an error occurred!
+            }
+            else
+            {
+                // Metadata contains file metadata such as size, content-type, and download URL.
+                StorageMetadata metadata = task.Result;
+                string download_url = metadata.DownloadUrl.ToString();
+                Debug.Log("Finished uploading...");
+                Debug.Log("download url = " + download_url);
+            }
+        });
+
+
+        FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
+        string json = JsonUtility.ToJson(fbLevelData);
+
+        DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+       
+        var childKey = reference.Child("Levels").Push().Key;
+        reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
+    }
+
+    public void SearchByLevelCode()
+    {
+        FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild("LevelName").EqualTo("test").GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                Debug.LogError("Error Downloading Level Infos");
+            }
+            else if (task.IsCompleted)
+            {
+                List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+                Debug.Log("Results Count:" + snapChildren.Count);
+            }
+        });
+    }
+
+    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, string startIndex, int range, int pageIndex, Action<List<DataSnapshot>, string, int> callback)
+    {
+        Debug.Log("Downlod for page:" + pageIndex + " with startIndex:" + startIndex);
+        string sortChildNode = "LevelName"; //default sort category
+        switch (sortCategory)
+        {
+            case LevelBrowserSortCategory.AuthorName:
+                sortChildNode = "AuthorName";
+                break;
+        }
+
+        if (sortType == LevelBrowserSortType.Ascending)
+        {
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.LogError("Error Downloading Level Infos");
+                }
+                else if (task.IsCompleted)
+                {
+                    string lastIndex = startIndex;
+                    List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+                    if (pageIndex > 0 && snapChildren.Count > 0)
+                    {
+                        snapChildren.RemoveAt(0);
+                    }
+
+                    if (snapChildren.Count > 0)
+                    {
+                        lastIndex = snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString();
+                    }
+
+                    callback(snapChildren, lastIndex, pageIndex);
+                    Debug.Log("Successfull download");
+                }
+            });
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(startIndex)) //TODO allow only alphanumeric input for levelNames and usernames
+            {
+                startIndex = LevelBrowser.LAST_ALPHABETICAL_STRING;
+            }
+            Debug.Log("StartIndex:" + startIndex);
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.LogError("Error Downloading Level Infos");
+                }
+                else if (task.IsCompleted)
+                {
+                    string lastIndex = startIndex;
+                    List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+                    snapChildren.Reverse();
+
+                    if (pageIndex > 0 && snapChildren.Count > 0)
+                    {
+                        snapChildren.RemoveAt(0);
+                    }
+             
+                    if (snapChildren.Count > 0)
+                    {
+                        lastIndex = snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString();
+                    }
+
+                    callback(snapChildren, lastIndex, pageIndex);
+                }
+            });
+        }   
+    }
+
+    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, double startIndex, int range, int pageIndex, Action<List<DataSnapshot>, double, int> callback)
+    {
+        string sortChildNode = "UserRating"; //default sort category
+
+        if (sortType == LevelBrowserSortType.Ascending)
+        {
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.LogError("Error Downloading Level Infos");
+                }
+                else if (task.IsCompleted)
+                {
+                    double lastIndex = startIndex;
+                    List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+                
+                    if (pageIndex > 0 && snapChildren.Count > 0)
+                    {
+                       snapChildren.RemoveAt(0);
+                    }
+                    Debug.Log("Children Count:" + snapChildren.Count);
+                 
+                    if (snapChildren.Count > 0)
+                    {
+                        lastIndex = double.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                    }    
+
+                    callback(snapChildren, lastIndex, pageIndex);
+                    Debug.Log("Successfull download");
+                }
+            });
+        }
+        else
+        {
+            if (startIndex < 0) //TODO allow only alphanumeric input for levelNames and usernames
+            {
+                startIndex = Double.MaxValue;
+            }
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.LogError("Error Downloading Level Infos");
+                }
+                else if (task.IsCompleted)
+                {
+                    double lastIndex = startIndex;
+                    List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+                    snapChildren.Reverse();
+
+                    if (pageIndex > 0 && snapChildren.Count > 0)
+                    {
+                        snapChildren.RemoveAt(0);
+                    }
+
+                    if (snapChildren.Count > 0)
+                    {
+                        lastIndex = double.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                    }
+
+                    callback(snapChildren, lastIndex, pageIndex);
+                }
+            });
+        }
+    }
+
+    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, int startIndex, int range, int pageIndex, Action<List<DataSnapshot>, int, int> callback)
+    {
+        string sortChildNode = "Date"; //default sort category
+
+        if (sortType == LevelBrowserSortType.Ascending)
+        {
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+            {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.LogError("Error Downloading Level Infos");
+                }
+                else if (task.IsCompleted)
+                {
+                    int lastIndex = startIndex;
+                    List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+
+                    if (pageIndex > 0 && snapChildren.Count > 0)
+                    {
+                        snapChildren.RemoveAt(0);
+                    }
+
+                    if (snapChildren.Count > 0)
+                    {
+                        lastIndex = int.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                    }
+
+                    callback(snapChildren, lastIndex, pageIndex);
+                }
+            });
+        }
+        else
+        {
+            if (startIndex < 0) //TODO allow only alphanumeric input for levelNames and usernames
+            {
+                startIndex = Int32.MaxValue;
+            }
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
+                if (task.IsFaulted || task.IsCanceled)
+                {
+                    Debug.LogError("Error Downloading Level Infos");
+                }
+                else if (task.IsCompleted)
+                {
+                    int lastIndex = startIndex;
+                    List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+                    snapChildren.Reverse();
+
+                    if (pageIndex > 0 && snapChildren.Count > 0)
+                    {
+                        snapChildren.RemoveAt(0);
+                    }
+
+                    if (snapChildren.Count > 0)
+                    {
+                        lastIndex = int.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                    }
+
+                    callback(snapChildren, lastIndex, pageIndex);
+                }
+            });
+        }
+    }
+
+    private T Deserialize<T>(byte[] param)
+    {
+        using (MemoryStream ms = new MemoryStream(param))
+        {
+            IFormatter br = new BinaryFormatter();
+            return (T)br.Deserialize(ms);
+        }
+    }
+}

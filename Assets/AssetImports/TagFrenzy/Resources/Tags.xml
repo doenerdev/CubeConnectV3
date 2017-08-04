@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tags>
+  <tag id="19">CreateGridFieldButton</tag>
+  <tag id="17">CubeGameplay</tag>
+  <tag id="15">CubeGameplayCamera</tag>
+  <tag id="13">InitialLoadingCanvas</tag>
+  <tag id="6">InitialLoadingScreen</tag>
+  <tag id="1">MainCamera</tag>
+  <tag id="14">MainMenu</tag>
+  <tag id="10">MainMenuCanvas</tag>
+  <tag id="7">MainMenuOptionsScreen</tag>
+  <tag id="8">MainMenuScreen</tag>
+  <tag id="9">MainMenuScreenSlide</tag>
+  <tag id="11">LevelBrowserPageSelection</tag>
+  <tag id="16">LevelBrowserPageSelectionScrollView</tag>
+  <tag id="12">SceneContainer</tag>
+  <tag id="18">SceneLoadingScreen</tag>
+</tags>
