@@ -14,7 +14,7 @@ public class EmptyGridField : GridField {
 
     public override Object GetSpecializedGridField()
     {
-        return gameObject.GetComponent<EmptyGridField>();
+        return this;
     }
 
     protected override void LoadMaterials()

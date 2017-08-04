@@ -13,7 +13,7 @@ public class MultiGridField : SimpleGridField
 
     public override Object GetSpecializedGridField()
     {
-        return gameObject.GetComponent<MultiGridField>();
+        return this;
     }
 
     public void SetRequiredConnections(int requiredConnections)

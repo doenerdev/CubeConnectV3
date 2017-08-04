@@ -45,17 +45,13 @@ public abstract class GridFieldConnectionBehaviour
         if (originGridField.GridFieldType == GridFieldType.MultiDirectionsGridField)
         {
             MultiDirectionsGridField origin = originGridField.GetSpecializedGridField() as MultiDirectionsGridField;
-            Debug.Log("Outgoing Direction:" + CubeHelper.GetConnectionDirectionOutgoing(originGridField, targetGridField)); //TODO remove later
             if (origin.IsDirectionPossible(CubeHelper.GetConnectionDirectionOutgoing(originGridField, targetGridField)) == false) return false;
         }
         if (targetGridField.GridFieldType == GridFieldType.MultiDirectionsGridField)
         {
             MultiDirectionsGridField target = targetGridField.GetSpecializedGridField() as MultiDirectionsGridField;
-            Debug.Log("Incoming Direction:" + CubeHelper.GetConnectionDirectionIncoming(originGridField, targetGridField)); //TODO remove later
             if (target.IsDirectionPossible(CubeHelper.GetConnectionDirectionIncoming(originGridField, targetGridField)) == false) return false;
         }
-
-        Debug.Log("Direction valid"); //TODO remove later
 
         return ValidTargetGridFieldTypes.ContainsKey(targetGridField.GridFieldType) && ValidTargetGridFieldTypes[targetGridField.GridFieldType] &&
             ValidTargetGridFieldConnetionStates.ContainsKey(targetGridField.ConnectionState) && ValidTargetGridFieldConnetionStates[targetGridField.ConnectionState];

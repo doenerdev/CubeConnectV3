@@ -10,7 +10,7 @@ public class MultiDirectionsGridField : MultiGridField
 
     public override UnityEngine.Object GetSpecializedGridField()
     {
-        return gameObject.GetComponent<MultiDirectionsGridField>();
+        return this;
     }
 
     public override void InitializeGridField(Cube parentCube, IntVector2 gridPositon, GridFieldType gridFieldType, GridFieldColor color = GridFieldColor.None)
@@ -55,7 +55,7 @@ public class MultiDirectionsGridField : MultiGridField
 
     public override int RequiredConnections()
     {
-        return _possibleConnectionDirections.Count(x => true);
+        return _possibleConnectionDirections.Count(x => x.Possible == true);
     }
 }
 

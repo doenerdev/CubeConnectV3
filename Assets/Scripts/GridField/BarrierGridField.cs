@@ -13,7 +13,7 @@ public class BarrierGridField : EmptyGridField {
 
     public override Object GetSpecializedGridField()
     {
-        return gameObject.GetComponent<BarrierGridField>();
+        return this;
     }
 
     protected override void LoadMaterials()

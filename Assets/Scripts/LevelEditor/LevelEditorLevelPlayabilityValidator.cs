@@ -119,6 +119,7 @@ public static class LevelEditorLevelPlayabilityValidator {
         { 
             List<GridField> levelSolution = new List<GridField>();
             PlayabilityValidationResult validationResult = CheckConnectionsFrom(i, new List<PlayabilityValidatorGridFieldInfo>(connectableGridFields), levelSolution);
+            _playabilityValidationResults.Add(validationResult);
             if (validationResult.Valid == true)
             {
                 _playabilityValidationResults.Add(validationResult);
@@ -127,7 +128,7 @@ public static class LevelEditorLevelPlayabilityValidator {
                 {
                     return;
                 }
-            }      
+            }
             ResetCubeMap(); //resets the connections states of the grid fields, important!
             _asyncPlayabilityValidator.ReportProgress((i/ connectableGridFields.Count) * 100);
         }
@@ -149,16 +150,11 @@ public static class LevelEditorLevelPlayabilityValidator {
                     GridField targetPortalGridField = portalGridField.RelatedPortalGridField;
                     int targetPortalGridFieldIndex = connectableGridFields.FindIndex(item => item.GridField.GridPosition == targetPortalGridField.GridPosition);
                     connectableGridFields[targetPortalGridFieldIndex] = new PlayabilityValidatorGridFieldInfo(connectableGridFields[targetPortalGridFieldIndex].GridField, PlayabilityValidatorGridFieldState.Connected, GridFieldConnectionState.PortalConnection);
-                    connectableGridFields[targetPortalGridFieldIndex].GridField.SetConnectionState(GridFieldConnectionState.PortalConnection, true);
+                    connectableGridFields[targetPortalGridFieldIndex].GridField.SetConnectionState(connectableGridFields[targetPortalGridFieldIndex].GridField.GetAppropriateTargetGridFieldConnectionState(GridFieldConnectionState.PortalConnection), true);
                     startGridField = connectableGridFields[targetPortalGridFieldIndex].GridField;
                     levelSolution.Add(startGridField);
                     break;
             }
-        }
-        else
-        {
-            //PlayabilityValidatorGridFieldState playabilityState = connectableGridFields[originIndex].GridField.RequiredConnections() <= connectableGridFields[originIndex].GridField.QtyConnections ? PlayabilityValidatorGridFieldState.Connected : PlayabilityValidatorGridFieldState.Default;
-            //connectableGridFields[originIndex] = AppropriateStartingGridFieldInfo(connectableGridFields[originIndex]);
         }
 
         for (int i = 0; i < connectableGridFields.Count; i++)
@@ -177,10 +173,6 @@ public static class LevelEditorLevelPlayabilityValidator {
 
                 return CheckConnectionsFrom(i, new List<PlayabilityValidatorGridFieldInfo>(connectableGridFields), new List<GridField>(levelSolution));
             }
-            else
-            {
-                //connectableGridFields[i] = new PlayabilityValidatorGridFieldInfo(connectableGridFields[i].GridField, PlayabilityValidatorGridFieldState.Visited, GridFieldConnectionState.Empty);
-            }
         }
 
         if (connectableGridFields.Count(x => x.PlayabilityValidatorGridFieldState == PlayabilityValidatorGridFieldState.Connected) == connectableGridFields.Count)
@@ -192,11 +184,8 @@ public static class LevelEditorLevelPlayabilityValidator {
 
     private static bool CheckPortalGridFieldsValidity(GridField[] connectableGridFields)
     {
-        //Debug.Log("Length:" + connectableGridFields.Length);
         for (int i = 0; i < connectableGridFields.Length; i++)
         {
-            //Debug.Log("Type:" + connectableGridFields[i].GridFieldType);
-            //Debug.Log("####################");
             if (connectableGridFields[i].GridFieldType != GridFieldType.PortalGridField)
             {
                 continue;
@@ -245,32 +234,6 @@ public static class LevelEditorLevelPlayabilityValidator {
         if (handler != null)
         {
             handler(null, new EventTextArgs(message));
-        }
-    }
-
-    private static PlayabilityValidatorGridFieldInfo AppropriateStartingGridFieldInfo(PlayabilityValidatorGridFieldInfo gridFieldInfo)
-    {
-        if (gridFieldInfo.GridField.GridFieldType != GridFieldType.MultiGridField)
-        {
-            gridFieldInfo.PlayabilityValidatorGridFieldState = PlayabilityValidatorGridFieldState.Connected;
-            gridFieldInfo.GridFieldConnectionState = GridFieldConnectionState.SimpleConnection;
-            return gridFieldInfo;
-        }
-        else
-        {
-
-            if (gridFieldInfo.GridField.RequiredConnections() <= (gridFieldInfo.GridField.QtyConnections))
-            {
-                gridFieldInfo.PlayabilityValidatorGridFieldState = PlayabilityValidatorGridFieldState.Connected;
-                gridFieldInfo.GridFieldConnectionState = GridFieldConnectionState.ClosedMultiConnection;
-                return gridFieldInfo;
-            }
-            else
-            {
-                gridFieldInfo.PlayabilityValidatorGridFieldState = PlayabilityValidatorGridFieldState.Default;
-                gridFieldInfo.GridFieldConnectionState = GridFieldConnectionState.OpenMultiConnection;
-                return gridFieldInfo;
-            }
         }
     }
 

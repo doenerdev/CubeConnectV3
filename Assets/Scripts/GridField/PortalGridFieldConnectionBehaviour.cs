@@ -24,8 +24,6 @@ public class PortalGridFieldConnectionBehaviour : GridFieldConnectionBehaviour
             return falseGridFieldConnection;
         }
 
-        Debug.Log("Is Valid Target");
-
         //check if the desired connection is a portal connection (from portal to portal) or a default connection (outgoing from an already connected portal)
         if (isPortalConnection == true)
         {
@@ -36,9 +34,9 @@ public class PortalGridFieldConnectionBehaviour : GridFieldConnectionBehaviour
             portalConnection.ValidGridFields.Add(gridFieldTarget);
             if (gridFieldOrigin.ConnectionState == GridFieldConnectionState.Empty) //if the portal field is the first field selected (overall)
             {
-                gridFieldOrigin.SetConnectionState(GridFieldConnectionState.SimpleConnection, playabilityTesting);
+                gridFieldOrigin.SetConnectionState(gridFieldTarget.GetAppropriateTargetGridFieldConnectionState(GridFieldConnectionState.SimpleConnection), playabilityTesting);
             }
-            gridFieldTarget.SetConnectionState(GridFieldConnectionState.PortalConnection, playabilityTesting);
+            gridFieldTarget.SetConnectionState(gridFieldTarget.GetAppropriateTargetGridFieldConnectionState(GridFieldConnectionState.PortalConnection), playabilityTesting);
             return portalConnection;
         }
         else

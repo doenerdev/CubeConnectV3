@@ -14,7 +14,7 @@ public class SimpleGridField : GridField
 
     public override Object GetSpecializedGridField()
     {
-        return gameObject.GetComponent<SimpleGridField>();
+        return this;
     }
 
     public override void InitializeGridField(Cube parentCube, IntVector2 gridPositon, GridFieldType gridFieldType, GridFieldColor color = GridFieldColor.None)

@@ -24,8 +24,7 @@ public class PortalGridField : GridField
 
     public override Object GetSpecializedGridField()
     {
-        return this as Object;
-        return gameObject.GetComponent<PortalGridField>();
+        return this;
     }
 
     public override void InitializeGridField(Cube parentCube, IntVector2 gridPositon, GridFieldType gridFieldType, GridFieldColor color = GridFieldColor.None)
