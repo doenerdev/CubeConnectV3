@@ -17,6 +17,7 @@ public class GameManager : Singleton<GameManager>
 
     [SerializeField] private string _productionLevelsDataPath;
     [SerializeField] private string _userLevelsDataPath;
+    [SerializeField] private string _userLevelsInfoPath;
     [SerializeField] private GameState _gameState;
 
     private MainMenu _mainMenu;
@@ -180,7 +181,7 @@ public class GameManager : Singleton<GameManager>
         Debug.Log("Bootstrap LevelEditor Production");
         StageAndLevelDataManager.Create();
         MobileInputManager.Create();
-
+        UnityMainThreadDispatcher.Create();
         Instantiate(Resources.Load("LevelEditorProduction"));
     }
 }

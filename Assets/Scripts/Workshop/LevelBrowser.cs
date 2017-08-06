@@ -214,6 +214,11 @@ public class LevelBrowser : Singleton<LevelBrowser>
     {
         _currentSortCategory = sortCategory;
     }
+
+    public void ShowDetailPage(LevelBrowserLevelTile tile)
+    {
+        
+    }
 }
 
 

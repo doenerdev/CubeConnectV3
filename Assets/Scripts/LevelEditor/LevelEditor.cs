@@ -55,7 +55,7 @@ public abstract class LevelEditor : MonoBehaviour
         GridField gridField = GridFactory.CreateGridField(new IntVector2(selected.GridPosition.x, selected.GridPosition.y), type, color, requiredConnections, possibleConnectionDirections);
         Cube.Instance.SetGridField(gridField, selected.GridPosition.x, selected.GridPosition.y);
         PossibleConnectionDirection[] connectionDirections = possibleConnectionDirections != null ? possibleConnectionDirections.ToArray(): null;
-        _currentLevelData.CubeMap[selected.GridPosition.x, selected.GridPosition.y] = new CubeMapGridInfo(type, color, requiredConnections, connectionDirections);
+        _currentLevelData.CubeMap[selected.GridPosition.x + (selected.GridPosition.y * _currentLevelData.GridSize* 3)] = new CubeMapGridInfo(type, color, requiredConnections, connectionDirections);
 
       
         GridField playabilityValidatorGridField = gridField.Clone() as GridField;

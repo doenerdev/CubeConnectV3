@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using ProtoBuf;
 using UnityEngine;
 
 public class MultiDirectionsGridField : MultiGridField
@@ -61,6 +62,7 @@ public class MultiDirectionsGridField : MultiGridField
 
 
 [Serializable]
+[ProtoContract]
 public enum ConnectionDirection
 {
     None,
@@ -71,6 +73,7 @@ public enum ConnectionDirection
 }
 
 [Serializable]
+[ProtoContract]
 public struct PossibleConnectionDirection
 {
     public ConnectionDirection Direction;

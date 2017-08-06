@@ -6,10 +6,13 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using ProtoBuf;
 
 [Serializable]
+[ProtoContract]
 public class StageAndLevelData {
 
+    [ProtoMember(1)]
     private List<StageData> _stages;
 
     public List<StageData> Stages
@@ -19,7 +22,6 @@ public class StageAndLevelData {
             return _stages;
         }
     }
-
 
     public StageAndLevelData()
     {

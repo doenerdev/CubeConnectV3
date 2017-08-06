@@ -46,6 +46,11 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         Debug.Log(e.Snapshot.Value);
     }
 
+    public void DownloadUserGeneratedLevel(string url)
+    {
+        
+    }
+
     public void UploadUserGeneratedLevel(UserGeneratedLevelData levelData)
     {
         byte[] custom_bytes = null;
@@ -324,4 +329,13 @@ public class FirebaseManager : Singleton<FirebaseManager> {
             return (T)br.Deserialize(ms);
         }
     }
+}
+
+
+public struct UserGeneratedLevelDBInfo
+{
+    public string LevelURL;
+    public string AuthorID;
+    public string AuthorName;
+
 }

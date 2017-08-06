@@ -207,12 +207,12 @@ public partial class Cube : Singleton<Cube>
         _cubeMap = new GridField[_gridSize * 3, _gridSize * 4];
         _necessaryConnectionsToWin = 0;
 
-        for (int x = 0; x < levelData.CubeMap.GetLength(0); x++)
+        for (int x = 0; x < _gridSize * 3; x++)
         {
-            for (int y = 0; y < levelData.CubeMap.GetLength(1); y++)
+            for (int y = 0; y < _gridSize * 4; y++)
             {
-                List<PossibleConnectionDirection> possibleConnections = levelData.CubeMap[x, y].PossibleConnectionDirections != null? levelData.CubeMap[x, y].PossibleConnectionDirections.ToList() : null;
-                _cubeMap[x, y] = GridFactory.CreateGridField(new IntVector2(x, y), levelData.CubeMap[x,y].GridFieldType, levelData.CubeMap[x, y].GridFieldColor, levelData.CubeMap[x, y].RequiredConnections, possibleConnections);
+                List<PossibleConnectionDirection> possibleConnections = levelData.CubeMap[x + (y * _gridSize * 3)].PossibleConnectionDirections != null? levelData.CubeMap[x + (y * _gridSize * 3)].PossibleConnectionDirections.ToList() : null;
+                _cubeMap[x, y] = GridFactory.CreateGridField(new IntVector2(x, y), levelData.CubeMap[x + (y * _gridSize * 3)].GridFieldType, levelData.CubeMap[x + (y * _gridSize * 3)].GridFieldColor, levelData.CubeMap[x + (y * _gridSize * 3)].RequiredConnections, possibleConnections);
                 _necessaryConnectionsToWin += _cubeMap[x, y].RequiredConnections();
             }
         }

@@ -34,8 +34,8 @@ public class LevelEditorProduction : LevelEditor
     private void Awake()
     {
         StageAndLevelDataManager.Instance.LoadingStageAndLevelDataComplete += new EventHandler<EventTextArgs>(LoadedStageAndLevelData);
+        StageAndLevelDataManager.Instance.LoadLevelAndStageDataAsync(GameManager.Instance.ProductionLevelsDataPath);
         Debug.Log(GameManager.Instance.ProductionLevelsDataPath);
-        StageAndLevelDataManager.Instance.LoadLevelAndStageDataAsync(GameManager.Instance.ProductionLevelsDataPath);   
     }
 
     private void LoadedStageAndLevelData(object sender, EventTextArgs args)

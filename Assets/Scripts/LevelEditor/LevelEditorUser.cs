@@ -30,7 +30,7 @@ public class LevelEditorUser : LevelEditor {
         }
     }
 
-    private void Start() //TODO Change back to Awake later
+    private void Awake() //TODO Change back to Awake later
     {
         StageAndLevelDataManager.Instance.LoadingUserGeneratedLevelDataHolderComplete += new EventHandler<EventTextArgs>(LoadedUserGeneratedLevelDataHolder);
         StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolder(GameManager.Instance.UserLevelsDataPath);

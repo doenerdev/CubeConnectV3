@@ -2,10 +2,12 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using ProtoBuf;
 using UnityEngine.EventSystems;
 using Object = UnityEngine.Object;
 
 [Serializable]
+[ProtoContract]
 public class MultiGridField : SimpleGridField
 {
     protected new GridFieldConnectionBehaviour _connectionBehaviour = new MultiGridFieldConnectionBehaviour();

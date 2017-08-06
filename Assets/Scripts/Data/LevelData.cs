@@ -4,16 +4,22 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
+using ProtoBuf;
 using UnityEngine;
 
 [Serializable]
+[ProtoContract]
 public class LevelData
 {
-
+    [ProtoMember(1)]
     protected uint _gridSize;
-    protected CubeMapGridInfo[,] _cubeMap;
+    [ProtoMember(2)]
+    protected CubeMapGridInfo[] _cubeMap;
+    [ProtoMember(3)]
     protected string _levelName;
+    [ProtoMember(4)]
     protected LevelStatus _levelStatus;
+    [ProtoMember(5)]
     protected uint _rating;
 
     public uint GridSize
@@ -23,7 +29,7 @@ public class LevelData
             return _gridSize;
         }
     }
-    public CubeMapGridInfo[,] CubeMap
+    public CubeMapGridInfo[] CubeMap
     {
         set
         {
@@ -68,18 +74,20 @@ public class LevelData
             _rating = 0;
     }
 
+    private LevelData() { }
+
     public LevelData(uint gridSize)
     {
         _gridSize = gridSize;
 
-        _cubeMap = new CubeMapGridInfo[_gridSize * 3, _gridSize * 4];
+        _cubeMap = new CubeMapGridInfo[_gridSize * 3 * _gridSize * 4];
         _levelName = "unnamed "; //+ _orderIndex;
 
-        for (int x = 0; x < _cubeMap.GetLength(0); x++)
+        for (int x = 0; x < _gridSize * 3; x++)
         {
-            for (int y = 0; y < _cubeMap.GetLength(1); y++)
+            for (int y = 0; y < _gridSize * 4; y++)
             {         
-                _cubeMap[x, y] = new CubeMapGridInfo(GridFieldType.EmptyGridField, GridFieldColor.Blue, 0, null);
+                _cubeMap[x + (y * _gridSize * 3)] = new CubeMapGridInfo(GridFieldType.EmptyGridField, GridFieldColor.Blue, 0, null);
             }
         }
     }
@@ -100,18 +108,19 @@ public class LevelData
 
     protected void ReinitializeCubeMap()
     {
-        _cubeMap = new CubeMapGridInfo[_gridSize * 3, _gridSize * 4];
-        for (int x = 0; x < _cubeMap.GetLength(0); x++)
+        _cubeMap = new CubeMapGridInfo[_gridSize * 3 + _gridSize * 4];
+        for (int x = 0; x < _gridSize * 3; x++)
         {
-            for (int y = 0; y < _cubeMap.GetLength(1); y++)
+            for (int y = 0; y < _gridSize * 4; y++)
             {
-                _cubeMap[x, y] = new CubeMapGridInfo(GridFieldType.EmptyGridField, GridFieldColor.Blue, 0, null);
+                _cubeMap[x + (y * _gridSize * 3)] = new CubeMapGridInfo(GridFieldType.EmptyGridField, GridFieldColor.Blue, 0, null);
             }
         }
     }
 }
 
 [Serializable]
+[ProtoContract]
 public enum LevelStatus
 {
     Unlocked,
@@ -120,6 +129,7 @@ public enum LevelStatus
 }
 
 [Serializable]
+[ProtoContract]
 public struct CubeMapGridInfo
 {
     public CubeMapGridInfo(GridFieldType type, GridFieldColor color, int requiredConnections, PossibleConnectionDirection[] possibleConnectionDirections)
@@ -130,8 +140,12 @@ public struct CubeMapGridInfo
         PossibleConnectionDirections = possibleConnectionDirections;
     }
 
+    [ProtoMember(1)]
     public GridFieldType GridFieldType;
+    [ProtoMember(2)]
     public GridFieldColor GridFieldColor;
+    [ProtoMember(3)]
     public int RequiredConnections;
+    [ProtoMember(4)]
     public PossibleConnectionDirection[] PossibleConnectionDirections;
 }

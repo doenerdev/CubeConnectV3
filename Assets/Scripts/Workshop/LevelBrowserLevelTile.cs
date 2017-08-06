@@ -18,6 +18,18 @@ public class LevelBrowserLevelTile : MonoBehaviour
     [SerializeField] private Text _levelName;
     [SerializeField] private Text _ratingText;
 
+    private string _authorID;
+    private string _levelDataURL;
+
+    public string AuthorID
+    {
+        get { return _authorID; }
+    }
+    public string LevelDataURL
+    {
+        get { return _levelDataURL; }
+    }
+
     public static LevelBrowserLevelTile Create(LevelBrowserLevelSelection levelSelection, DataSnapshot data)
     {
         GameObject go = Instantiate(Resources.Load("LevelBrowser/LevelBrowserTile")) as GameObject;
@@ -25,10 +37,13 @@ public class LevelBrowserLevelTile : MonoBehaviour
         levelTile._parentLevelSelection = levelSelection;
         levelTile._levelName.text = data.Child("AuthorName").Value.ToString();
         levelTile._ratingText.text = data.Child("UserRating").Value.ToString();
+        levelTile._authorID = data.Child("AuthorID").Value.ToString();
+        levelTile._levelDataURL = data.Child("LevelDataURL").Value.ToString();
         return levelTile;
     }
 
     public void Clicked()
     {
+        LevelBrowser.Instance.ShowDetailPage(this);
     }
 }

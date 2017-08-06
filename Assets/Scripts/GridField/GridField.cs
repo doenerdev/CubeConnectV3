@@ -3,9 +3,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using ProtoBuf;
 using Object = UnityEngine.Object;
 
 [DisallowMultipleComponent]
+[ProtoContract]
 public abstract class GridField : MonoBehaviour, ICloneable
 {
     protected Cube _parentCube;
@@ -204,6 +206,7 @@ public abstract class GridField : MonoBehaviour, ICloneable
 /// <summary>  
 /// A vector implementation based on integers
 /// </summary>
+[ProtoContract]
 public struct IntVector2
 {
     public int x;
@@ -258,6 +261,7 @@ public struct IntVector2
     }
 }
 
+[ProtoContract]
 public enum GridFieldType
 {
     EmptyGridField,
@@ -268,6 +272,7 @@ public enum GridFieldType
     MultiDirectionsGridField,
 }
 
+[ProtoContract]
 public enum GridFieldConnectionState
 {
     Empty,
@@ -284,6 +289,7 @@ public enum GridFieldMaterial
     Selected
 }
 
+[ProtoContract]
 public enum GridFieldColor
 {
     None,
