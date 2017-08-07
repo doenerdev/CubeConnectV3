@@ -31,7 +31,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         StageAndLevelDataManager.Instance.AddUserGeneratedLevel(levelData);
         StageAndLevelDataManager.Instance.SaveUserGeneratedLevelDataHolder();
 
-        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolder(GameManager.Instance.UserLevelsDataPath);*/
+        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolderAsync(GameManager.Instance.UserLevelsDataPath);*/
         base.Awake();
         FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
         "https://qube-4b14f.firebaseio.com/");
@@ -51,56 +51,98 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         
     }
 
-    public void UploadUserGeneratedLevel(UserGeneratedLevelData levelData)
+    public void GenerateUniqueLevelID(UserGeneratedLevelData levelData, UserGeneratedLevelInfo levelInfo, Action<UserGeneratedLevelData, UserGeneratedLevelInfo, string> callback)
+    {
+        string uid = Guid.NewGuid().ToString().GetHashCode().ToString("x");
+        FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild("LevelID").EqualTo(uid).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                Debug.LogError("Error Generating UID");
+            }
+            else if (task.IsCompleted)
+            {
+
+                List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
+                if (snapChildren.Count < 1)
+                {
+                    callback(levelData, levelInfo, uid);
+                }
+                else
+                {
+                    uid = Guid.NewGuid().ToString().GetHashCode().ToString("x");
+                    GenerateUniqueLevelID(levelData, levelInfo, callback);
+                }
+            }
+        });
+    }
+
+    public void UploadUserGeneratedLevel(UserGeneratedLevelData levelData, UserGeneratedLevelInfo levelInfo)
+    {
+        GenerateUniqueLevelID(levelData, levelInfo, UploadUserGeneratedLevel);
+    }
+
+    private void UploadUserGeneratedLevel(UserGeneratedLevelData levelData, UserGeneratedLevelInfo levelInfo, string levelcode)
     {
         byte[] custom_bytes = null;
         FirebaseStorage storage = FirebaseStorage.DefaultInstance;
-        var data_ref_url = "gs://qube-4b14f.appspot.com/user-generated-levels/" + levelData.LevelName + "bla" + ".lvl";
+        var data_ref_url = "gs://qube-4b14f.appspot.com/user-generated-levels/" + levelcode + "bla" + ".lvl";
         StorageReference data_ref = storage.GetReferenceFromUrl(data_ref_url);
 
-        BinaryFormatter bf = new BinaryFormatter();
-        using (var ms = new MemoryStream())
+        Dictionary<string, UserGeneratedLevelInfo> levelInfos = StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList();
+        if (levelInfos.ContainsKey(levelInfo.LevelCode))
         {
-            bf.Serialize(ms, levelData);
-            custom_bytes = ms.ToArray();
+            levelInfo = levelInfos[levelInfo.LevelCode];
+            levelInfos.Remove(levelInfo.LevelCode);
+            levelInfo.LevelCode = levelcode;
+            levelInfos.Add(levelcode, levelInfo);
         }
 
-        var level_metadata = new Firebase.Storage.MetadataChange
+        levelData.SyncWithLevelInfo(levelInfo);
+        StageAndLevelDataManager.Instance.SaveUserGeneratedLevel(levelData, levelInfo.LevelCode,
+        dataPath =>
         {
-            CustomMetadata = new Dictionary<string, string>
+            levelInfo.LevelDataURL = dataPath;
+            StageAndLevelDataManager.Instance.SaveUserGeneratedLevelInfoHolder(() =>
             {
-                {"difficulty", levelData.Difficulty.ToString()},
-                {"rating", "0"},
-                { "qtyRatings", levelData.QtyRatings.ToString()},
-                { "levelName", levelData.LevelName}
-            }
-        };
+                levelData.SetLevelID(levelcode); //TODO set all the relevant data
+                Debug.Log(data_ref_url);
 
-        // Upload the file to the path "images/rivers.jpg"
-        data_ref.PutBytesAsync(custom_bytes, level_metadata).ContinueWith((Task<StorageMetadata> task) => {
-            if (task.IsFaulted || task.IsCanceled)
-            {
-                Debug.Log(task.Exception.ToString());
-                // Uh-oh, an error occurred!
-            }
-            else
-            {
-                // Metadata contains file metadata such as size, content-type, and download URL.
-                StorageMetadata metadata = task.Result;
-                string download_url = metadata.DownloadUrl.ToString();
-                Debug.Log("Finished uploading...");
-                Debug.Log("download url = " + download_url);
-            }
+                BinaryFormatter bf = new BinaryFormatter();
+                using (var ms = new MemoryStream())
+                {
+                    bf.Serialize(ms, levelData);
+                    custom_bytes = ms.ToArray();
+                }
+
+                // Upload the file to the path "images/rivers.jpg"
+                data_ref.PutBytesAsync(custom_bytes).ContinueWith((Task<StorageMetadata> task) => {
+                    if (task.IsFaulted || task.IsCanceled)
+                    {
+                        Debug.Log(task.Exception.ToString());
+                        // Uh-oh, an error occurred!
+                    }
+                    else
+                    {
+                        // Metadata contains file metadata such as size, content-type, and download URL.
+                        StorageMetadata metadata = task.Result;
+                        string download_url = metadata.DownloadUrl.ToString();
+                        Debug.Log("Finished uploading...");
+                        Debug.Log("download url = " + download_url);
+                    }
+                });
+
+
+                FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
+                string json = JsonUtility.ToJson(fbLevelData);
+
+                DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+
+                var childKey = reference.Child("Levels").Push().Key;
+                reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
+            });
+
         });
-
-
-        FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
-        string json = JsonUtility.ToJson(fbLevelData);
-
-        DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
-       
-        var childKey = reference.Child("Levels").Push().Key;
-        reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
     }
 
     public void SearchByLevelCode()

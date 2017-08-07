@@ -14,13 +14,12 @@ public class GameManager : Singleton<GameManager>
 
     private UnityEngine.AsyncOperation _asyncLevelLoader;
     private bool _applicationBootstrappingComplete = false;
-
-    [SerializeField] private string _productionLevelsDataPath;
-    [SerializeField] private string _userLevelsDataPath;
-    [SerializeField] private string _userLevelsInfoPath;
-    [SerializeField] private GameState _gameState;
-
+    private string _userLevelsDataPath;
+    private string _userLevelsInfoPath;
+    private string _productionLevelsDataPath;
     private MainMenu _mainMenu;
+
+    [SerializeField] private GameState _gameState;
 
     public GameState GameState
     {
@@ -34,6 +33,10 @@ public class GameManager : Singleton<GameManager>
     {
         get { return _userLevelsDataPath; }
     }
+    public string UserLevelsInfoPath
+    {
+        get { return _userLevelsInfoPath; }
+    }
 
     protected void Awake()
     {
@@ -44,12 +47,14 @@ public class GameManager : Singleton<GameManager>
         if (Application.platform == RuntimePlatform.Android)
         {
             _productionLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/level.lvl";
-            _userLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/userLevels.lvl";
+            _userLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/UserLevels/Own";
+            _userLevelsInfoPath = "jar:file://" + Application.dataPath + "!/assets/Levels/userLevels.info";
         }
         else
         {
             _productionLevelsDataPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/level.lvl");
-            _userLevelsDataPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/userLevels.lvl");
+            _userLevelsDataPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/UserLevels/Own");
+            _userLevelsInfoPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/userLevels.info");
             //_productionLevelsDataPath = Application.dataPath + "/Levels/level.lvl";
             // _userLevelsDataPath = Application.dataPath + "/Levels/userLevels.lvl";
         }
@@ -69,7 +74,7 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
-    private void LoadedStageAndLevelData(object sender, EventTextArgs args)
+    private void LoadedNeccessaryInitialLevelData(object sender, EventTextArgs args)
     {
         if (Nutzertest == false && _applicationBootstrappingComplete == false && _gameState == GameState.InitialLoading) //security check so the stage and level selection will only be created once
         {
@@ -170,8 +175,8 @@ public class GameManager : Singleton<GameManager>
         FirebaseManager.Create();
         FirebaseAuthentication.Create();
 
-        StageAndLevelDataManager.Instance.LoadingStageAndLevelDataComplete += new EventHandler<EventTextArgs>(LoadedStageAndLevelData);
-        StageAndLevelDataManager.Instance.LoadLevelAndStageDataAsync(_productionLevelsDataPath);
+        StageAndLevelDataManager.Instance.LoadingNeccessaryInitialLevelDataFromStreamingComplete += new EventHandler<EventTextArgs>(LoadedNeccessaryInitialLevelData);
+        StageAndLevelDataManager.Instance.LoadNeccessaryInitialLevelData();
 
         PersistentSceneData.BootstrappedApplication = true;
     }

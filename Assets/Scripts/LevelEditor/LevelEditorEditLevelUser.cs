@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class LevelEditorEditLevelUser : MonoBehaviour {
 
     private string _initialLevelName;
-    private int _initialIndex;
 
     [SerializeField] private InputField _levelNameInput;
     [SerializeField] Slider _gridSizeSlider;
@@ -23,9 +22,8 @@ public class LevelEditorEditLevelUser : MonoBehaviour {
         _gridSizeSlider.onValueChanged.AddListener(delegate { OnSliderValueChanged(); });
     }
 
-    public void ShowEditOptions(int levelIndex, string levelName, int gridSize)
+    public void ShowEditOptions(string levelName)
     {
-        _initialIndex = levelIndex;
         _initialLevelName = levelName;
         _levelNameInput.text = _initialLevelName;
 
@@ -34,7 +32,7 @@ public class LevelEditorEditLevelUser : MonoBehaviour {
 
     public void ConfirmAndLoadLevel()
     {
-        LevelEditorUser.Instance.LevelEdited(_levelNameInput.text, (uint)_gridSizeSlider.value, _initialIndex);
+        LevelEditorUser.Instance.LevelEdited(_levelNameInput.text);
     }
 
     public void Cancel()

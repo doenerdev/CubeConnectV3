@@ -5,24 +5,24 @@ using UnityEngine;
 
 public class SelectLevelButtonUser : MonoBehaviour {
 
-    private int _levelIndex;
+    private string _levelCode;
     private string _levelName;
 
     [SerializeField] private Text _levelIndexText;
     [SerializeField] private Text _levelNameText;
 
-    public static SelectLevelButtonUser Create(int levelIndex, string levelName)
+    public static SelectLevelButtonUser Create(string levelCode, string levelName)
     {
         GameObject selectButtonGO = Instantiate(Resources.Load("LevelSelectButtonUser")) as GameObject;
         SelectLevelButtonUser selectLevelButton = selectButtonGO.GetComponent<SelectLevelButtonUser>();
         selectLevelButton.SetLevelName(levelName);
-        selectLevelButton._levelIndex = levelIndex;
+        selectLevelButton._levelCode = levelCode;
         return selectLevelButton;
     }
 
     public void SelectClick()
     {
-        LevelEditorUser.Instance.LevelSelected(_levelIndex);
+        LevelEditorUser.Instance.LevelSelected(_levelCode);
     }
 
     public void RemoveClicked()

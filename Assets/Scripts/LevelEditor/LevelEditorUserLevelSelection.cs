@@ -9,7 +9,7 @@ public class LevelEditorUserLevelSelection : MonoBehaviour {
 
     [SerializeField] private Transform _levelSelectionScrollView;
 
-    public void LoadLevelsIntoScrollView(List<UserGeneratedLevelData> levels)
+    public void LoadLevelsIntoScrollView(Dictionary<string, UserGeneratedLevelInfo> levelInfos)
     {
         foreach (Transform child in _levelSelectionScrollView)
         {
@@ -17,9 +17,9 @@ public class LevelEditorUserLevelSelection : MonoBehaviour {
         }
 
         _selectLevelButtons = new List<SelectLevelButtonUser>();
-        for (int i = 0; i < levels.Count; i++)
+        foreach (KeyValuePair<string, UserGeneratedLevelInfo> levelInfo in levelInfos)
         {
-            _selectLevelButtons.Add(SelectLevelButtonUser.Create(i, levels[i].LevelName));
+            _selectLevelButtons.Add(SelectLevelButtonUser.Create(levelInfo.Value.LevelCode, levelInfo.Value.LevelName));
             _selectLevelButtons[_selectLevelButtons.Count - 1].transform.SetParent(_levelSelectionScrollView);
         }
     }

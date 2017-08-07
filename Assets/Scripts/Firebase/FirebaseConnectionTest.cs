@@ -23,7 +23,7 @@ public class FirebaseConnectionTest : MonoBehaviour
 	// Use this for initialization
 	void Start ()
 	{
-        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolder(GameManager.Instance.UserLevelsDataPath);
+     //   StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolderAsync(GameManager.Instance.UserLevelsDataPath);
 
         FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
         "https://qube-4b14f.firebaseio.com/");

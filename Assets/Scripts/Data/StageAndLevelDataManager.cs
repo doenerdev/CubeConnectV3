@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -17,8 +18,9 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     private BackgroundWorker _asyncUserGeneratedLevelDataHolderLoader;
     private UserGeneratedLevesListInfo _userGeneratedLevesListInfo;
 
-    [SerializeField] private UserGeneratedLevelDataHolder _userGeneratedLevelDataHolder;
-    [SerializeField] private StageAndLevelData _stageAndLevelData;
+    private UserGeneratedLevelDataHolder _userGeneratedLevelDataHolder;
+    private UserGeneratedLevelInfoHolder _userGeneratedLevelInfoHolder;
+    private StageAndLevelData _stageAndLevelData;
 
     protected void Awake()
     {
@@ -27,7 +29,11 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
 
         _stageAndLevelData = new StageAndLevelData();
         _userGeneratedLevelDataHolder = new UserGeneratedLevelDataHolder();
+        _userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder();
         InitializeBackgroundWorker();
+
+        //_userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder(); //TODO JUST FOR TESTING REMOVE LATER
+        //SaveUserGeneratedLevelInfoHolder();
     }
 
     private void InitializeBackgroundWorker()
@@ -35,7 +41,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         _asyncUserGeneratedLevelDataHolderLoader = new BackgroundWorker();
         _asyncUserGeneratedLevelDataHolderLoader.WorkerReportsProgress = false;
         _asyncUserGeneratedLevelDataHolderLoader.WorkerSupportsCancellation = true;
-        _asyncUserGeneratedLevelDataHolderLoader.DoWork += (obj, e) => LoadUserGeneratedLevelDataHolder((string)e.Argument);
+        _asyncUserGeneratedLevelDataHolderLoader.DoWork += (obj, e) => LoadUserGeneratedLevelDataHolderAsync((string)e.Argument);
         _asyncUserGeneratedLevelDataHolderLoader.RunWorkerCompleted += new RunWorkerCompletedEventHandler((object sender, RunWorkerCompletedEventArgs e) =>
         {
             UnityMainThreadDispatcher.Enqueue(() =>
@@ -86,12 +92,33 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         _userGeneratedLevelDataHolder.Levels.Insert(levelIndex, data);
     }
 
-    public void SaveUserGeneratedLevelDataHolder()
+    public void SaveUserGeneratedLevelInfoHolder(Action callback = null)
     {
-        BinaryFormatter binaryFormatter = new BinaryFormatter();
-        FileStream stream = new FileStream(GameManager.Instance.UserLevelsDataPath.Replace("file:///", ""), FileMode.Create);
-        binaryFormatter.Serialize(stream, _userGeneratedLevelDataHolder);
-        stream.Close();
+        Task.Run(() =>
+        {
+            FileStream stream = new FileStream(GameManager.Instance.UserLevelsInfoPath.Replace("file:///", ""), FileMode.Create);
+            ProtoBuf.Serializer.Serialize<UserGeneratedLevelInfoHolder>(stream, _userGeneratedLevelInfoHolder);
+            stream.Close();
+            RaiseSavingUserGeneratedLevelDataHolderComplete("Saving UserGeneratedLevelDataHolder complete");
+
+            if (callback != null)
+            {
+                callback();
+            }
+        });
+    }
+
+    public void SaveUserGeneratedLevel(UserGeneratedLevelData levelData, string levelcode, Action<string> callback)
+    {
+        Task.Run(() =>
+        {
+            FileStream stream = new FileStream((GameManager.Instance.UserLevelsDataPath + "/" + levelcode + ".lvl").Replace("file:///", ""), FileMode.Create);
+            ProtoBuf.Serializer.Serialize<UserGeneratedLevelData>(stream, levelData);
+            UnityMainThreadDispatcher.Enqueue(() => {Debug.Log(levelData.CubeMap);});
+            stream.Close();
+            callback((GameManager.Instance.UserLevelsDataPath + "/" + levelcode + ".lvl"));
+            //RaiseSavingUserGeneratedLevelDataHolderComplete("Saving UserGeneratedLevelDataHolder complete");
+        });
     }
 
     public void SaveLevelAndStageData()
@@ -101,7 +128,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         stream.Close();
     }
 
-    public void LoadUserGeneratedLevelDataHolder(string path)
+    public void LoadUserGeneratedLevelDataHolderAsync(string path)
     {
         Debug.Log("Loading Level");
         StartCoroutine(LoadUserGeneratedLevelDataHolderFromStreamingAsync(path));
@@ -138,6 +165,52 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         StartCoroutine(LoadLevelAndStageDataFromStreaming(path));
     }
 
+    public void LoadNeccessaryInitialLevelData()
+    {
+        StartCoroutine(LoadNeccessaryInitialLevelDataFromStreaming());
+    }
+
+    private IEnumerator LoadNeccessaryInitialLevelDataFromStreaming()
+    {
+        WWW levelFile = new WWW(GameManager.Instance.ProductionLevelsDataPath);
+        yield return levelFile;
+        byte[] levelFileBytes = levelFile.bytes;
+        WWW infoFile = new WWW(GameManager.Instance.UserLevelsInfoPath);
+        yield return infoFile;
+        byte[] infoFileBytes = infoFile.bytes;
+
+        Task.Run(() =>
+        {
+            StageAndLevelData stageAndLevelData = null;
+            UserGeneratedLevelInfoHolder userGeneratedLevelInfoHolder = null;
+            using (MemoryStream ms = new MemoryStream(levelFileBytes))
+            {
+                stageAndLevelData = ProtoBuf.Serializer.Deserialize<StageAndLevelData>(new BufferedStream(ms));
+                ms.Close();
+            }
+            using (MemoryStream ms = new MemoryStream(infoFileBytes))
+            {
+                userGeneratedLevelInfoHolder = ProtoBuf.Serializer.Deserialize<UserGeneratedLevelInfoHolder>(new BufferedStream(ms));
+                ms.Close();
+            }
+
+
+            UnityMainThreadDispatcher.Enqueue(() =>
+            {
+                if (stageAndLevelData != null)
+                {
+                    _stageAndLevelData = stageAndLevelData;
+                }
+                Debug.Log(_stageAndLevelData.Stages.Count);
+                if (userGeneratedLevelInfoHolder != null)
+                {
+                    _userGeneratedLevelInfoHolder = userGeneratedLevelInfoHolder;
+                }
+                RaiseLoadingNeccessaryInitialLevelDataFromStreamingComplete("RaiseLoadingNeccessaryInitialLevelDataFromStreamingComplete complete");
+            });
+        });
+    }
+
     private IEnumerator LoadLevelAndStageDataFromStreaming(string path)
     {
         WWW file = new WWW(path);
@@ -171,7 +244,29 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     public List<UserGeneratedLevelData> GetUserGeneratedLevels()
     {
         return _userGeneratedLevelDataHolder.Levels;
+    }
+
+    public Dictionary<string, UserGeneratedLevelInfo> GetUserGeneratedLevelInfosList()
+    {
+        return _userGeneratedLevelInfoHolder.LevelInfos;
     } 
+
+    public UserGeneratedLevelInfo GetUserGeneratedLevelInfoByLevelcode(string levelcode)
+    {
+        if (_userGeneratedLevelInfoHolder.LevelInfos.ContainsKey(levelcode))
+        {
+            return _userGeneratedLevelInfoHolder.LevelInfos[levelcode];
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    /*public UserGeneratedLevelData GetUserGeneratedLevelDataByLevelcode(string levelcode)
+    {
+        
+    }*/
 
     public List<StageData> GetStages()
     {
@@ -204,9 +299,29 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         }
     }
 
+    private void RaiseSavingUserGeneratedLevelDataHolderComplete(string message)
+    {
+        EventHandler<EventTextArgs> handler = SavingUserGeneratedLevelDataHolderComplete;
+        if (handler != null)
+        {
+            handler(null, new EventTextArgs(message));
+        }
+    }
+
+    private void RaiseLoadingNeccessaryInitialLevelDataFromStreamingComplete(string message)
+    {
+        EventHandler<EventTextArgs> handler = LoadingNeccessaryInitialLevelDataFromStreamingComplete;
+        if (handler != null)
+        {
+            handler(null, new EventTextArgs(message));
+        }
+    }
+
     #region Events
     public event EventHandler<EventTextArgs> LoadingStageAndLevelDataComplete;
     public event EventHandler<EventTextArgs> LoadingUserGeneratedLevelDataHolderComplete;
+    public event EventHandler<EventTextArgs> SavingUserGeneratedLevelDataHolderComplete;
+    public event EventHandler<EventTextArgs> LoadingNeccessaryInitialLevelDataFromStreamingComplete;
     #endregion Events
 }
 

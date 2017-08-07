@@ -9,6 +9,7 @@ using UnityEngine;
 
 [Serializable]
 [ProtoContract]
+[ProtoInclude(100, typeof(UserGeneratedLevelData))]
 public class LevelData
 {
     [ProtoMember(1)]
@@ -18,7 +19,7 @@ public class LevelData
     [ProtoMember(3)]
     protected string _levelName;
     [ProtoMember(4)]
-    protected LevelStatus _levelStatus;
+    private LevelStatus _levelStatus;
     [ProtoMember(5)]
     protected uint _rating;
 
@@ -33,8 +34,10 @@ public class LevelData
     {
         set
         {
-            if (value.GetLength(0) == _cubeMap.GetLength(0) && value.GetLength(1) == _cubeMap.GetLength(1))
+            if (value.Length == _cubeMap.Length || _cubeMap == null)
+            {
                 _cubeMap = value;
+            }
         }
         get { return _cubeMap; }
     }
@@ -74,14 +77,14 @@ public class LevelData
             _rating = 0;
     }
 
-    private LevelData() { }
+    protected LevelData() { }
 
     public LevelData(uint gridSize)
     {
         _gridSize = gridSize;
 
         _cubeMap = new CubeMapGridInfo[_gridSize * 3 * _gridSize * 4];
-        _levelName = "unnamed "; //+ _orderIndex;
+        _levelName = "Unnamed"; //+ _orderIndex;
 
         for (int x = 0; x < _gridSize * 3; x++)
         {
