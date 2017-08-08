@@ -38,7 +38,7 @@ public class UserGeneratedLevelInfo
     [ProtoMember(6)]
     public int QtyRatings;
     [ProtoMember(7)]
-    public int UserRating;
+    public float UserRating;
     [ProtoMember(8)]
     public int Difficulty;
     [ProtoMember(9)]

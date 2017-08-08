@@ -19,7 +19,7 @@ public class UserGeneratedLevelData : LevelData
     [ProtoMember(5)]
     private int _qtyRatings = 0;
     [ProtoMember(6)]
-    private int _userRating = 0;
+    private float _userRating = 0;
     [ProtoMember(7)]
     private int _difficulty = 1;
     [ProtoMember(8)]
@@ -49,7 +49,7 @@ public class UserGeneratedLevelData : LevelData
     {
         get { return _qtyRatings; }
     }
-    public int UserRating 
+    public float UserRating 
     {
        get { return _userRating; }
     }

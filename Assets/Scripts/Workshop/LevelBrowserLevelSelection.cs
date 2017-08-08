@@ -42,8 +42,9 @@ public class LevelBrowserLevelSelection : MonoBehaviour {
     {
         foreach (var dataSnapshot in data)
         {
-            _levelTiles.Add(LevelBrowserLevelTile.Create(this, dataSnapshot));
-            _levelTiles[_levelTiles.Count - 1].transform.SetParent(_levelTilesContainer.transform);
+            var levelTile = LevelBrowserLevelTile.Create(this, dataSnapshot);
+            _levelTiles.Add(levelTile);
+            levelTile.transform.SetParent(_levelTilesContainer.transform);
         }
     }
 

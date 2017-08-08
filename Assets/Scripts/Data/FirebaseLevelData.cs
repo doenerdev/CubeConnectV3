@@ -10,7 +10,7 @@ public class FirebaseLevelData : MonoBehaviour {
     public string AuthorID;
     public string LevelID;
     public int QtyRatings;
-    public int UserRating;
+    public float UserRating;
     public int Difficulty;
     public string LevelDataURL;
 

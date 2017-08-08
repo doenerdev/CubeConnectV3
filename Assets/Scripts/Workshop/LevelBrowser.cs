@@ -18,6 +18,7 @@ public class LevelBrowser : Singleton<LevelBrowser>
     private string _aplhabeticStartIndex = null;
     private int _integerNumericStartIndex = Int32.MinValue;
     private double _doubleNumericStartIndex = Double.MinValue;
+    public string _lastEntryKey = null;
     private List<int> _alreadyDownloadedIndices;
 
 
@@ -101,24 +102,25 @@ public class LevelBrowser : Singleton<LevelBrowser>
         {
             qtyLevels++;
         }
-
+        Debug.Log(_currentSortCategory);
+        Debug.Log(SortCategoryDataType(_currentSortCategory));
         switch (SortCategoryDataType(_currentSortCategory))
         {
             case LevelBrowserCategoryDataType.Integer:
-                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _integerNumericStartIndex, qtyLevels, pageIndex, DownloadingLevelInfosCompleteInteger);
+                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _integerNumericStartIndex, qtyLevels, pageIndex, _lastEntryKey, DownloadingLevelInfosCompleteInteger);
                 break;
             case LevelBrowserCategoryDataType.Double:
-                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _doubleNumericStartIndex, qtyLevels, pageIndex, DownloadingLevelInfosCompleteDouble);
+                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _doubleNumericStartIndex, qtyLevels, pageIndex, _lastEntryKey, DownloadingLevelInfosCompleteDouble);
                 break;
             case LevelBrowserCategoryDataType.String:
-                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _aplhabeticStartIndex, qtyLevels, pageIndex, DownloadingLevelInfosCompleteAlphabetical);
+                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _aplhabeticStartIndex, qtyLevels, pageIndex, _lastEntryKey, DownloadingLevelInfosCompleteAlphabetical);
                 break;
         }
 
         _levelBrowserPageSelection.AddPage();
     }
 
-    public void DownloadingLevelInfosCompleteInteger(List<DataSnapshot> data, int newStartIndex, int pageIndex)
+    public void DownloadingLevelInfosCompleteInteger(List<DataSnapshot> data, int newStartIndex, int pageIndex, string lastEntryKey = null)
     {
         if (pageIndex < 0) return;
         _alreadyDownloadedIndices.Add(pageIndex);
@@ -133,13 +135,18 @@ public class LevelBrowser : Singleton<LevelBrowser>
         _integerNumericStartIndex = newStartIndex;
         _lastPageIndex++;
 
+        if (lastEntryKey != null)
+        {
+            _lastEntryKey = lastEntryKey;
+        }
+
         if (pageIndex == 0)
         {
             DownloadLeveInfosForPage(_lastPageIndex + 1);
         }
     }
 
-    public void DownloadingLevelInfosCompleteDouble(List<DataSnapshot> data, double newStartIndex, int pageIndex)
+    public void DownloadingLevelInfosCompleteDouble(List<DataSnapshot> data, double newStartIndex, int pageIndex, string lastEntryKey = null)
     {
         Debug.Log("new startIndex:" + newStartIndex);
         if (pageIndex < 0) return;
@@ -155,6 +162,11 @@ public class LevelBrowser : Singleton<LevelBrowser>
         _doubleNumericStartIndex = newStartIndex;
         _lastPageIndex++;
 
+        if (lastEntryKey != null)
+        {
+            _lastEntryKey = lastEntryKey;
+        }
+
         if (pageIndex == 0)
         {
             Debug.Log(pageIndex);
@@ -162,7 +174,7 @@ public class LevelBrowser : Singleton<LevelBrowser>
         }
     }
 
-    public void DownloadingLevelInfosCompleteAlphabetical(List<DataSnapshot> data, string newStartIndex, int pageIndex)
+    public void DownloadingLevelInfosCompleteAlphabetical(List<DataSnapshot> data, string newStartIndex, int pageIndex, string lastEntryKey = null)
     {
         if (pageIndex < 0) return;
         _alreadyDownloadedIndices.Add(pageIndex);
@@ -176,7 +188,11 @@ public class LevelBrowser : Singleton<LevelBrowser>
         _levelBrowserPageSelection.Pages[pageIndex].CreateLevelTiles(data);
         _aplhabeticStartIndex = newStartIndex;
         _lastPageIndex++;
-        Debug.Log(_aplhabeticStartIndex);
+
+        if (lastEntryKey != null)
+        {
+            _lastEntryKey = lastEntryKey;
+        }
 
         if (pageIndex == 0)
         {
@@ -198,8 +214,10 @@ public class LevelBrowser : Singleton<LevelBrowser>
             case LevelBrowserSortCategory.AuthorName:
             case LevelBrowserSortCategory.LevelName:
                 return LevelBrowserCategoryDataType.String;
+                break;
             case LevelBrowserSortCategory.Rating:
                 return LevelBrowserCategoryDataType.Double;
+                break;
             default:
                 return LevelBrowserCategoryDataType.Integer;
         }
@@ -217,7 +235,7 @@ public class LevelBrowser : Singleton<LevelBrowser>
 
     public void ShowDetailPage(LevelBrowserLevelTile tile)
     {
-        
+        LevelBrowserDetailView.Create(tile.LevelInfo);
     }
 }
 

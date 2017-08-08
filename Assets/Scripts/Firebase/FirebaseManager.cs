@@ -148,8 +148,8 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                     });
 
 
-                    FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
-                    string json = JsonUtility.ToJson(fbLevelData);
+                    //FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
+                    string json = JsonUtility.ToJson(levelInfo);
 
                     DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
 
@@ -176,7 +176,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         });
     }
 
-    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, string startIndex, int range, int pageIndex, Action<List<DataSnapshot>, string, int> callback)
+    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, string startIndex, int range, int pageIndex, string lastEntryKey, Action<List<DataSnapshot>, string, int, string> callback)
     {
         Debug.Log("Downlod for page:" + pageIndex + " with startIndex:" + startIndex);
         string sortChildNode = "LevelName"; //default sort category
@@ -189,7 +189,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
 
         if (sortType == LevelBrowserSortType.Ascending)
         {
-            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex, lastEntryKey).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
             {
                 if (task.IsFaulted || task.IsCanceled)
                 {
@@ -198,6 +198,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                 else if (task.IsCompleted)
                 {
                     string lastIndex = startIndex;
+                    string newLastEntryKey = null;
                     List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
                     if (pageIndex > 0 && snapChildren.Count > 0)
                     {
@@ -207,9 +208,10 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                     if (snapChildren.Count > 0)
                     {
                         lastIndex = snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString();
+                        newLastEntryKey = snapChildren[snapChildren.Count - 1].Key;
                     }
 
-                    callback(snapChildren, lastIndex, pageIndex);
+                    callback(snapChildren, lastIndex, pageIndex, newLastEntryKey);
                     Debug.Log("Successfull download");
                 }
             });
@@ -221,7 +223,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                 startIndex = LevelBrowser.LAST_ALPHABETICAL_STRING;
             }
             Debug.Log("StartIndex:" + startIndex);
-            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex, lastEntryKey).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
                 if (task.IsFaulted || task.IsCanceled)
                 {
                     Debug.LogError("Error Downloading Level Infos");
@@ -229,6 +231,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                 else if (task.IsCompleted)
                 {
                     string lastIndex = startIndex;
+                    string newLastEntryKey = null;
                     List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
                     snapChildren.Reverse();
 
@@ -240,21 +243,22 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                     if (snapChildren.Count > 0)
                     {
                         lastIndex = snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString();
+                        newLastEntryKey = snapChildren[snapChildren.Count - 1].Key;
                     }
 
-                    callback(snapChildren, lastIndex, pageIndex);
+                    callback(snapChildren, lastIndex, pageIndex, newLastEntryKey);
                 }
             });
         }   
     }
 
-    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, double startIndex, int range, int pageIndex, Action<List<DataSnapshot>, double, int> callback)
+    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, double startIndex, int range, int pageIndex, string lastEntryKey, Action<List<DataSnapshot>, double, int, string> callback)
     {
         string sortChildNode = "UserRating"; //default sort category
 
         if (sortType == LevelBrowserSortType.Ascending)
         {
-            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex, lastEntryKey).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
             {
                 if (task.IsFaulted || task.IsCanceled)
                 {
@@ -263,6 +267,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                 else if (task.IsCompleted)
                 {
                     double lastIndex = startIndex;
+                    string newLastEntryKey = null;
                     List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
                 
                     if (pageIndex > 0 && snapChildren.Count > 0)
@@ -274,9 +279,10 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                     if (snapChildren.Count > 0)
                     {
                         lastIndex = double.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                        newLastEntryKey = snapChildren[snapChildren.Count - 1].Key;
                     }    
 
-                    callback(snapChildren, lastIndex, pageIndex);
+                    callback(snapChildren, lastIndex, pageIndex, newLastEntryKey);
                     Debug.Log("Successfull download");
                 }
             });
@@ -287,7 +293,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
             {
                 startIndex = Double.MaxValue;
             }
-            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex, lastEntryKey).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
                 if (task.IsFaulted || task.IsCanceled)
                 {
                     Debug.LogError("Error Downloading Level Infos");
@@ -295,6 +301,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                 else if (task.IsCompleted)
                 {
                     double lastIndex = startIndex;
+                    string newLastEntryKey = null;
                     List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
                     snapChildren.Reverse();
 
@@ -306,21 +313,22 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                     if (snapChildren.Count > 0)
                     {
                         lastIndex = double.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                        newLastEntryKey = snapChildren[snapChildren.Count - 1].Key;
                     }
 
-                    callback(snapChildren, lastIndex, pageIndex);
+                    callback(snapChildren, lastIndex, pageIndex, newLastEntryKey);
                 }
             });
         }
     }
 
-    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, int startIndex, int range, int pageIndex, Action<List<DataSnapshot>, int, int> callback)
+    public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, int startIndex, int range, int pageIndex, string lastEntryKey, Action<List<DataSnapshot>, int, int, string> callback)
     {
         string sortChildNode = "Date"; //default sort category
-
+        Debug.Log(startIndex);
         if (sortType == LevelBrowserSortType.Ascending)
         {
-            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).StartAt(startIndex, lastEntryKey).LimitToFirst(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
             {
                 if (task.IsFaulted || task.IsCanceled)
                 {
@@ -329,6 +337,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                 else if (task.IsCompleted)
                 {
                     int lastIndex = startIndex;
+                    string newLastEntryKey = null;
                     List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
 
                     if (pageIndex > 0 && snapChildren.Count > 0)
@@ -339,9 +348,10 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                     if (snapChildren.Count > 0)
                     {
                         lastIndex = int.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                        newLastEntryKey = snapChildren[snapChildren.Count - 1].Key;
                     }
 
-                    callback(snapChildren, lastIndex, pageIndex);
+                    callback(snapChildren, lastIndex, pageIndex, newLastEntryKey);
                 }
             });
         }
@@ -351,7 +361,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
             {
                 startIndex = Int32.MaxValue;
             }
-            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
+            FirebaseDatabase.DefaultInstance.GetReference("Levels").OrderByChild(sortChildNode).EndAt(startIndex, lastEntryKey).LimitToLast(range).GetValueAsync().ContinueWith((Task<DataSnapshot> task) => {
                 if (task.IsFaulted || task.IsCanceled)
                 {
                     Debug.LogError("Error Downloading Level Infos");
@@ -359,6 +369,7 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                 else if (task.IsCompleted)
                 {
                     int lastIndex = startIndex;
+                    string newLastEntryKey = null;
                     List<DataSnapshot> snapChildren = task.Result.Children.ToList(); //get the children nodes
                     snapChildren.Reverse();
 
@@ -370,9 +381,10 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                     if (snapChildren.Count > 0)
                     {
                         lastIndex = int.Parse(snapChildren[snapChildren.Count - 1].Child(sortChildNode).Value.ToString());
+                        newLastEntryKey = snapChildren[snapChildren.Count - 1].Key;
                     }
 
-                    callback(snapChildren, lastIndex, pageIndex);
+                    callback(snapChildren, lastIndex, pageIndex, newLastEntryKey);
                 }
             });
         }
