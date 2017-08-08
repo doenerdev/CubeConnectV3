@@ -43,7 +43,6 @@ public class LevelEditorUser : LevelEditor {
     {
         _levelEditorLevelSelection.LoadLevelsIntoScrollView(StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList());
         Debug.Log("Loaded User generated Levels");
-        Debug.Log("Qty Levels:" + StageAndLevelDataManager.Instance.GetUserGeneratedLevels().Count);
     }
 
     public void CreateNewLevel()
@@ -60,13 +59,6 @@ public class LevelEditorUser : LevelEditor {
 
     public void LevelSelected(string levelCode)
     {
-        foreach (var userGeneratedLevelInfo in StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList())
-        {
-            Debug.Log(userGeneratedLevelInfo.Key);
-        }
-        Debug.Log("-----");
-        Debug.Log(_currentlySelectedLevelInfo);
-        Debug.Log(StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList()[levelCode]);
         _currentlySelectedLevelInfo = StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfoByLevelcode(levelCode);
         _levelEditorLevelSelection.gameObject.SetActive(false);
         _levelEditorEditLevelUser.ShowEditOptions(_currentlySelectedLevelInfo.LevelName);
@@ -83,7 +75,7 @@ public class LevelEditorUser : LevelEditor {
         UserGeneratedLevelData level = null;
         if (String.IsNullOrEmpty(_currentlySelectedLevelInfo.LevelCode) == false)
         {
-            StartCoroutine(LoadAndShowCurrentlySelectedCubeLevel(HideLoadingOverlay));
+            LoadAndShowCurrentlySelectedCubeLevel();
         }
         else
         {
@@ -100,29 +92,14 @@ public class LevelEditorUser : LevelEditor {
         }
     }
 
-    private IEnumerator LoadAndShowCurrentlySelectedCubeLevel(Action callback)
+    private void LoadAndShowCurrentlySelectedCubeLevel()
     {
-        Debug.Log(_currentlySelectedLevelInfo.LevelDataURL);
-        WWW file = new WWW(_currentlySelectedLevelInfo.LevelDataURL);
-        yield return file;
-        byte[] fileBytes = file.bytes;
-        Task.Run(() =>
+        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelAsync(_currentlySelectedLevelInfo.FileLocation, (levelData) =>
         {
-            using (MemoryStream ms = new MemoryStream(fileBytes))
-            {
-                _currentlySelectedLevelData = ProtoBuf.Serializer.Deserialize<UserGeneratedLevelData>(new BufferedStream(ms));
-                ms.Close();
-                UnityMainThreadDispatcher.Enqueue(() =>
-                {
-                    _levelEditorEditLevelUser.gameObject.SetActive(false);
-                    callback();
-                    Debug.Log(_currentlySelectedLevelData.AuthorName);
-                    Debug.Log(_currentlySelectedLevelData.LevelDataURL);
-                    Debug.Log(_currentlySelectedLevelData.CubeMap);
-                    ShowCubeLevel(_currentlySelectedLevelData);
-                });
-
-            }
+            _currentlySelectedLevelData = levelData;
+            _levelEditorEditLevelUser.gameObject.SetActive(false);
+            HideLoadingOverlay();
+            ShowCubeLevel(_currentlySelectedLevelData);
         });
     }
 
@@ -196,7 +173,7 @@ public class LevelEditorUser : LevelEditor {
         StageAndLevelDataManager.Instance.SaveUserGeneratedLevel(_currentlySelectedLevelData, _currentlySelectedLevelInfo.LevelCode,
             dataPath =>
             {
-                _currentlySelectedLevelInfo.LevelDataURL = dataPath;
+                _currentlySelectedLevelInfo.FileLocation = dataPath;
                 StageAndLevelDataManager.Instance.SaveUserGeneratedLevelInfoHolder();
             });
     }

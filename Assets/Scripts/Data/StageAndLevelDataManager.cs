@@ -32,8 +32,8 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         _userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder();
         InitializeBackgroundWorker();
 
-        //_userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder(); //TODO JUST FOR TESTING REMOVE LATER
-        //SaveUserGeneratedLevelInfoHolder();
+       // _userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder(); //TODO JUST FOR TESTING REMOVE LATER
+       // SaveUserGeneratedLevelInfoHolder();
     }
 
     private void InitializeBackgroundWorker()
@@ -96,6 +96,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     {
         Task.Run(() =>
         {
+            Directory.CreateDirectory(GameManager.Instance.UserLevelsInfoFolderPath.Replace("file:///", ""));      
             FileStream stream = new FileStream(GameManager.Instance.UserLevelsInfoPath.Replace("file:///", ""), FileMode.Create);
             ProtoBuf.Serializer.Serialize<UserGeneratedLevelInfoHolder>(stream, _userGeneratedLevelInfoHolder);
             stream.Close();
@@ -112,6 +113,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     {
         Task.Run(() =>
         {
+            Directory.CreateDirectory(GameManager.Instance.UserLevelsDataPath.Replace("file:///", ""));
             FileStream stream = new FileStream((GameManager.Instance.UserLevelsDataPath + "/" + levelcode + ".lvl").Replace("file:///", ""), FileMode.Create);
             ProtoBuf.Serializer.Serialize<UserGeneratedLevelData>(stream, levelData);
             UnityMainThreadDispatcher.Enqueue(() => {Debug.Log(levelData.CubeMap);});
@@ -175,9 +177,6 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         WWW levelFile = new WWW(GameManager.Instance.ProductionLevelsDataPath);
         yield return levelFile;
         byte[] levelFileBytes = levelFile.bytes;
-        WWW infoFile = new WWW(GameManager.Instance.UserLevelsInfoPath);
-        yield return infoFile;
-        byte[] infoFileBytes = infoFile.bytes;
 
         Task.Run(() =>
         {
@@ -188,12 +187,20 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
                 stageAndLevelData = ProtoBuf.Serializer.Deserialize<StageAndLevelData>(new BufferedStream(ms));
                 ms.Close();
             }
-            using (MemoryStream ms = new MemoryStream(infoFileBytes))
+            UnityMainThreadDispatcher.Enqueue(() => { GameManager.Instance.UserLevelsInfoPath.Replace("file:///", ""); });
+            if (File.Exists(GameManager.Instance.UserLevelsInfoPath.Replace("file:///", ""))) //if the file doesn't exist yet, create it
             {
-                userGeneratedLevelInfoHolder = ProtoBuf.Serializer.Deserialize<UserGeneratedLevelInfoHolder>(new BufferedStream(ms));
-                ms.Close();
+                using (FileStream fs = File.Open(GameManager.Instance.UserLevelsInfoPath.Replace("file:///", ""), FileMode.Open))
+                {
+                    userGeneratedLevelInfoHolder = ProtoBuf.Serializer.Deserialize<UserGeneratedLevelInfoHolder>(fs);
+                    fs.Close();
+                }
             }
-
+            else
+            {
+                userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder();
+                SaveUserGeneratedLevelInfoHolder();
+            }
 
             UnityMainThreadDispatcher.Enqueue(() =>
             {
@@ -201,7 +208,6 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
                 {
                     _stageAndLevelData = stageAndLevelData;
                 }
-                Debug.Log(_stageAndLevelData.Stages.Count);
                 if (userGeneratedLevelInfoHolder != null)
                 {
                     _userGeneratedLevelInfoHolder = userGeneratedLevelInfoHolder;
@@ -209,6 +215,23 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
                 RaiseLoadingNeccessaryInitialLevelDataFromStreamingComplete("RaiseLoadingNeccessaryInitialLevelDataFromStreamingComplete complete");
             });
         });
+    }
+
+    public void LoadUserGeneratedLevelAsync(string fileLocation, Action<UserGeneratedLevelData> callback = null)
+    {
+        using (FileStream fs = File.Open(fileLocation.Replace("file:///", ""), FileMode.Open))
+        {
+            UserGeneratedLevelData levelData = ProtoBuf.Serializer.Deserialize<UserGeneratedLevelData>(new BufferedStream(fs));
+            fs.Close();
+            UnityMainThreadDispatcher.Enqueue(() =>
+            {
+                if (callback != null)
+                {
+                    callback(levelData);
+                }
+            });
+
+        }
     }
 
     private IEnumerator LoadLevelAndStageDataFromStreaming(string path)
@@ -236,16 +259,6 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         });
     }
 
-    public void LoadUserGeneratedLevesListInfoAsync(string path)
-    {
-        StartCoroutine(LoadLevelAndStageDataFromStreaming(path));
-    }
-
-    public List<UserGeneratedLevelData> GetUserGeneratedLevels()
-    {
-        return _userGeneratedLevelDataHolder.Levels;
-    }
-
     public Dictionary<string, UserGeneratedLevelInfo> GetUserGeneratedLevelInfosList()
     {
         return _userGeneratedLevelInfoHolder.LevelInfos;
@@ -257,16 +270,8 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         {
             return _userGeneratedLevelInfoHolder.LevelInfos[levelcode];
         }
-        else
-        {
-            return null;
-        }
+        return null;
     }
-
-    /*public UserGeneratedLevelData GetUserGeneratedLevelDataByLevelcode(string levelcode)
-    {
-        
-    }*/
 
     public List<StageData> GetStages()
     {

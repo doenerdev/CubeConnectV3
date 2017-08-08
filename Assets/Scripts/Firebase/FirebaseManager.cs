@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading.Tasks;
@@ -46,9 +47,21 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         Debug.Log(e.Snapshot.Value);
     }
 
-    public void DownloadUserGeneratedLevel(string url)
-    {
-        
+    public void DownloadUserGeneratedLevel(string url, string levelcode)
+    {      
+        long maxAllowedSize = 3 * 1024 * 1024; //3MB as the max. allowed file size
+        FirebaseStorage.DefaultInstance.GetReferenceFromUrl(url).GetBytesAsync(maxAllowedSize).ContinueWith((Task<byte[]> task) => {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                Debug.Log(task.Exception.ToString());
+                // Uh-oh, an error occurred!
+            }
+            else
+            {
+                byte[] fileContents = task.Result;
+                File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelcode + ".lvl", fileContents);
+            }
+        });
     }
 
     public void GenerateUniqueLevelID(UserGeneratedLevelData levelData, UserGeneratedLevelInfo levelInfo, Action<UserGeneratedLevelData, UserGeneratedLevelInfo, string> callback)
@@ -95,54 +108,56 @@ public class FirebaseManager : Singleton<FirebaseManager> {
             levelInfo = levelInfos[levelInfo.LevelCode];
             levelInfos.Remove(levelInfo.LevelCode);
             levelInfo.LevelCode = levelcode;
+            levelInfo.LevelDataURL = data_ref_url;
             levelInfos.Add(levelcode, levelInfo);
         }
 
         levelData.SyncWithLevelInfo(levelInfo);
         StageAndLevelDataManager.Instance.SaveUserGeneratedLevel(levelData, levelInfo.LevelCode,
-        dataPath =>
-        {
-            levelInfo.LevelDataURL = dataPath;
-            StageAndLevelDataManager.Instance.SaveUserGeneratedLevelInfoHolder(() =>
+            dataPath =>
             {
-                levelData.SetLevelID(levelcode); //TODO set all the relevant data
-                Debug.Log(data_ref_url);
-
-                BinaryFormatter bf = new BinaryFormatter();
-                using (var ms = new MemoryStream())
+                UnityMainThreadDispatcher.Enqueue(() => {Debug.Log(dataPath);});
+                levelInfo.FileLocation = dataPath;
+                StageAndLevelDataManager.Instance.SaveUserGeneratedLevelInfoHolder(() =>
                 {
-                    bf.Serialize(ms, levelData);
-                    custom_bytes = ms.ToArray();
-                }
 
-                // Upload the file to the path "images/rivers.jpg"
-                data_ref.PutBytesAsync(custom_bytes).ContinueWith((Task<StorageMetadata> task) => {
-                    if (task.IsFaulted || task.IsCanceled)
+                    levelData.SetLevelID(levelcode); //TODO set all the relevant data
+                    Debug.Log(data_ref_url);
+
+                    using (var ms = new MemoryStream())
                     {
-                        Debug.Log(task.Exception.ToString());
-                        // Uh-oh, an error occurred!
+                        ProtoBuf.Serializer.Serialize<UserGeneratedLevelData>(ms, levelData);
+                        custom_bytes = ms.ToArray();
                     }
-                    else
-                    {
-                        // Metadata contains file metadata such as size, content-type, and download URL.
-                        StorageMetadata metadata = task.Result;
-                        string download_url = metadata.DownloadUrl.ToString();
-                        Debug.Log("Finished uploading...");
-                        Debug.Log("download url = " + download_url);
-                    }
+
+                    // Upload the file to the path "images/rivers.jpg"
+                    data_ref.PutBytesAsync(custom_bytes).ContinueWith((Task<StorageMetadata> task) => {
+                        if (task.IsFaulted || task.IsCanceled)
+                        {
+                            Debug.Log(task.Exception.ToString());
+                            // Uh-oh, an error occurred!
+                        }
+                        else
+                        {
+                            // Metadata contains file metadata such as size, content-type, and download URL.
+                            StorageMetadata metadata = task.Result;
+                            string download_url = metadata.DownloadUrl.ToString();
+                            Debug.Log("Finished uploading...");
+                            Debug.Log("download url = " + download_url);
+                        }
+                    });
+
+
+                    FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
+                    string json = JsonUtility.ToJson(fbLevelData);
+
+                    DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+
+                    var childKey = reference.Child("Levels").Push().Key;
+                    reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
                 });
 
-
-                FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
-                string json = JsonUtility.ToJson(fbLevelData);
-
-                DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
-
-                var childKey = reference.Child("Levels").Push().Key;
-                reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
             });
-
-        });
     }
 
     public void SearchByLevelCode()

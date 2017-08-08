@@ -15,7 +15,9 @@ public class GameManager : Singleton<GameManager>
     private UnityEngine.AsyncOperation _asyncLevelLoader;
     private bool _applicationBootstrappingComplete = false;
     private string _userLevelsDataPath;
+    private string _downloadedUserLevelsDataPath;
     private string _userLevelsInfoPath;
+    private string _userLevelsInfoFolderPath;
     private string _productionLevelsDataPath;
     private MainMenu _mainMenu;
 
@@ -37,6 +39,14 @@ public class GameManager : Singleton<GameManager>
     {
         get { return _userLevelsInfoPath; }
     }
+    public string UserLevelsInfoFolderPath
+    {
+        get { return _userLevelsInfoFolderPath; }
+    }
+    public string DownloadedUserLevelsDataPath
+    {
+        get { return DownloadedUserLevelsDataPath; }
+    }
 
     protected void Awake()
     {
@@ -47,14 +57,24 @@ public class GameManager : Singleton<GameManager>
         if (Application.platform == RuntimePlatform.Android)
         {
             _productionLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/level.lvl";
-            _userLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/UserLevels/Own";
-            _userLevelsInfoPath = "jar:file://" + Application.dataPath + "!/assets/Levels/userLevels.info";
+            //_userLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/UserLevels/Own";
+            //_downloadedUserLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/UserLevels/Downloaded";
+            //_userLevelsInfoPath = "jar:file://" + Application.dataPath + "!/assets/Levels/userLevels.info";
+            _userLevelsDataPath = "jar:file://" + Application.persistentDataPath + "!/assets/Levels/UserLevels/Own";
+            _downloadedUserLevelsDataPath = "jar:file://" + Application.persistentDataPath + "!/assets/Levels/UserLevels/Downloaded";
+            _userLevelsInfoFolderPath = "jar:file://" + Application.persistentDataPath + "!/assets/Levels/";
+            _userLevelsInfoPath = _userLevelsInfoFolderPath + "userLevels.info";
         }
         else
         {
             _productionLevelsDataPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/level.lvl");
-            _userLevelsDataPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/UserLevels/Own");
-            _userLevelsInfoPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/userLevels.info");
+            //_userLevelsDataPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/UserLevels/Own");
+            //_downloadedUserLevelsDataPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/UserLevels/Downloaded");
+            //_userLevelsInfoPath = System.IO.Path.Combine("file:///" + Application.streamingAssetsPath, "Levels/userLevels.info");
+            _userLevelsDataPath = System.IO.Path.Combine("file:///" + Application.persistentDataPath, "Levels/UserLevels/Own");
+            _downloadedUserLevelsDataPath = System.IO.Path.Combine("file:///" + Application.persistentDataPath, "Levels/UserLevels/Downloaded");
+            _userLevelsInfoFolderPath = System.IO.Path.Combine("file:///" + Application.persistentDataPath, "Levels/");
+            _userLevelsInfoPath = System.IO.Path.Combine(_userLevelsInfoFolderPath, "userLevels.info");
             //_productionLevelsDataPath = Application.dataPath + "/Levels/level.lvl";
             // _userLevelsDataPath = Application.dataPath + "/Levels/userLevels.lvl";
         }

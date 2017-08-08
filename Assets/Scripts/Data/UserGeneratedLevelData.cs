@@ -26,6 +26,8 @@ public class UserGeneratedLevelData : LevelData
     private int _qtyDownloads = 0;
     [ProtoMember(9)]
     private long _date;
+    [ProtoMember(10)]
+    private string _fileLocation;
 
     public string AuthorName
     {
@@ -76,6 +78,11 @@ public class UserGeneratedLevelData : LevelData
         }
     }
 
+    public string FileLocation
+    {
+        get { return _fileLocation; }
+    }
+
     private UserGeneratedLevelData() { }
 
     public UserGeneratedLevelData(uint gridSize) : base(gridSize)
@@ -97,6 +104,7 @@ public class UserGeneratedLevelData : LevelData
         _userRating = levelInfo.UserRating;
         _difficulty = levelInfo.Difficulty;
         _qtyDownloads = levelInfo.QtyDownloads;
+        _fileLocation = levelInfo.FileLocation;
         _date = levelInfo.Date;
     }
 }
