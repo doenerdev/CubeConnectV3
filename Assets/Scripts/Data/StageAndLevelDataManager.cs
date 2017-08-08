@@ -32,8 +32,8 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         _userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder();
         InitializeBackgroundWorker();
 
-       // _userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder(); //TODO JUST FOR TESTING REMOVE LATER
-       // SaveUserGeneratedLevelInfoHolder();
+        //_userGeneratedLevelInfoHolder = new UserGeneratedLevelInfoHolder(); //TODO JUST FOR TESTING REMOVE LATER
+        //SaveUserGeneratedLevelInfoHolder();
     }
 
     private void InitializeBackgroundWorker()
@@ -92,6 +92,28 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         _userGeneratedLevelDataHolder.Levels.Insert(levelIndex, data);
     }
 
+    public void RemoveUserGeneratedLevel(string levelcode)
+    {
+        var levelInfo = _userGeneratedLevelInfoHolder.LevelInfos.Where(e => e.Value.LevelCode == levelcode)
+                .Select(e => (KeyValuePair<string, UserGeneratedLevelInfo>?)e)
+                .FirstOrDefault();
+
+        if (levelInfo != null)
+        {
+            _userGeneratedLevelInfoHolder.LevelInfos.Remove(levelcode);
+            Debug.Log(levelInfo.Value.Value.FileLocation);
+            if (File.Exists(levelInfo.Value.Value.FileLocation.Replace("file:///", "")))
+            {
+                Debug.Log("Deleted File");
+                File.Delete(levelInfo.Value.Value.FileLocation.Replace("file:///", ""));
+            }
+            else
+            {
+                Debug.Log("File not found File");
+            }
+        }
+    }
+
     public void SaveUserGeneratedLevelInfoHolder(Action callback = null)
     {
         Task.Run(() =>
@@ -106,6 +128,18 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
             {
                 callback();
             }
+        });
+    }
+
+    public void SaveDownloadedUserGeneratedLevel(UserGeneratedLevelInfo levelInfo, byte[] file)
+    {
+        Task.Run(() =>
+        {
+            levelInfo.FileLocation = GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl";
+            _userGeneratedLevelInfoHolder.LevelInfos.Add(levelInfo.LevelCode, levelInfo); //TODO make a security check if the levelcode already exists in the dic
+            Directory.CreateDirectory(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", ""));
+            File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl", file);
+            SaveUserGeneratedLevelInfoHolder();
         });
     }
 
@@ -262,7 +296,43 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     public Dictionary<string, UserGeneratedLevelInfo> GetUserGeneratedLevelInfosList()
     {
         return _userGeneratedLevelInfoHolder.LevelInfos;
-    } 
+    }
+
+    public Dictionary<string, UserGeneratedLevelInfo> GetOwnUserGeneratedLevelInfosList()
+    {
+        if (Application.isEditor)
+        {
+            return
+            _userGeneratedLevelInfoHolder.LevelInfos.Where(
+                x => x.Value.AuthorID == FirebaseAuthentication.DESKTOP_USER_ID)
+                .ToDictionary(x => x.Key, x => x.Value);
+        }
+        else
+        {
+            return
+            _userGeneratedLevelInfoHolder.LevelInfos.Where(
+                x => x.Value.AuthorID == FirebaseAuthentication.Instance.CurrentUserInfo.UserID)
+                .ToDictionary(x => x.Key, x => x.Value);
+        }
+    }
+
+    public Dictionary<string, UserGeneratedLevelInfo> GetDownloadedUserGeneratedLevelInfosList()
+    {
+        if (Application.isEditor)
+        {
+            return
+          _userGeneratedLevelInfoHolder.LevelInfos.Where(
+              x => x.Value.AuthorID != FirebaseAuthentication.DESKTOP_USER_ID)
+              .ToDictionary(x => x.Key, x => x.Value);
+        }
+        else
+        {
+            return
+          _userGeneratedLevelInfoHolder.LevelInfos.Where(
+              x => x.Value.AuthorID != FirebaseAuthentication.Instance.CurrentUserInfo.UserID)
+              .ToDictionary(x => x.Key, x => x.Value);
+        }      
+    }
 
     public UserGeneratedLevelInfo GetUserGeneratedLevelInfoByLevelcode(string levelcode)
     {

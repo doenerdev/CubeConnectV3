@@ -14,8 +14,6 @@ public class UserGeneratedLevelData : LevelData
     private string _authorID;
     [ProtoMember(3)]
     private string _levelID;
-    [ProtoMember(4)]
-    private string _levelDataURL;
     [ProtoMember(5)]
     private int _qtyRatings = 0;
     [ProtoMember(6)]
@@ -40,10 +38,6 @@ public class UserGeneratedLevelData : LevelData
     public string LevelID
     {
         get { return _levelID; }
-    }
-    public string LevelDataURL
-    {
-        get { return _levelDataURL; }
     }
     public int QtyRatings
     {
@@ -99,7 +93,6 @@ public class UserGeneratedLevelData : LevelData
         _authorName = levelInfo.AuthorName;
         _authorID = levelInfo.AuthorID;
         _levelID = levelInfo.LevelID;
-        _levelDataURL = levelInfo.LevelDataURL;
         _qtyRatings = levelInfo.QtyRatings;
         _userRating = levelInfo.UserRating;
         _difficulty = levelInfo.Difficulty;

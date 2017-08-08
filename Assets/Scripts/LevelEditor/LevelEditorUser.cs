@@ -41,7 +41,7 @@ public class LevelEditorUser : LevelEditor {
 
     private void LoadedUserGeneratedLevelDataHolder(object sender, EventTextArgs args)
     {
-        _levelEditorLevelSelection.LoadLevelsIntoScrollView(StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList());
+        _levelEditorLevelSelection.LoadLevelsIntoScrollView(StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList());
         Debug.Log("Loaded User generated Levels");
     }
 
@@ -86,7 +86,11 @@ public class LevelEditorUser : LevelEditor {
                 _currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.Instance.CurrentUserInfo.Username;
                 _currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.Instance.CurrentUserInfo.UserID;
             }
-            _currentlySelectedLevelInfo.AuthorName = "Namez"; //TODO REMOVE LATER. JUST FOR TESTING
+            else
+            {
+                _currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.DESKTOP_USER_ID;
+                _currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.DESKTOP_USER_USERNAME;
+            }
 
             StartCoroutine(CreateAndShowCurrentlySelectedCubeLevel());
         }

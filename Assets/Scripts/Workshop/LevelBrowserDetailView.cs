@@ -32,7 +32,8 @@ public class LevelBrowserDetailView : MonoBehaviour
 
     public void DownloadClicked()
     {
-        FirebaseManager.Instance.DownloadUserGeneratedLevel(_levelInfo.LevelDataURL, _levelInfo.LevelCode);
+        Debug.Log("Download Level");
+        FirebaseManager.Instance.DownloadUserGeneratedLevel(_levelInfo);
     }
 
     public void CloseButtonClicked()

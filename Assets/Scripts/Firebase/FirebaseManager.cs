@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using System.Threading.Tasks;
 using Firebase;
 using Firebase.Database;
@@ -22,7 +23,6 @@ public class FirebaseManager : Singleton<FirebaseManager> {
     public int Range = 2;
 
     private bool loaded = false;
-    private System.IO.Stream stream;
 
     // Use this for initialization
     void Awake()
@@ -47,21 +47,23 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         Debug.Log(e.Snapshot.Value);
     }
 
-    public void DownloadUserGeneratedLevel(string url, string levelcode)
-    {      
-        long maxAllowedSize = 3 * 1024 * 1024; //3MB as the max. allowed file size
-        FirebaseStorage.DefaultInstance.GetReferenceFromUrl(url).GetBytesAsync(maxAllowedSize).ContinueWith((Task<byte[]> task) => {
-            if (task.IsFaulted || task.IsCanceled)
-            {
-                Debug.Log(task.Exception.ToString());
-                // Uh-oh, an error occurred!
-            }
-            else
-            {
-                byte[] fileContents = task.Result;
-                File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelcode + ".lvl", fileContents);
-            }
-        });
+    private IEnumerator DownloadUserGeneratedLevelAsync(UserGeneratedLevelInfo levelInfo)
+    {
+        Debug.Log(levelInfo.LevelDataURL);
+        WWW file = new WWW(levelInfo.LevelDataURL);
+        yield return file;
+        Debug.Log("Downlaoded file");
+
+        /*levelInfo.FileLocation = GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelcode + ".lvl";
+
+        Directory.CreateDirectory(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", ""));
+        File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelcode + ".lvl", file.bytes);*/
+        StageAndLevelDataManager.Instance.SaveDownloadedUserGeneratedLevel(levelInfo, file.bytes);
+    }
+
+    public void DownloadUserGeneratedLevel(UserGeneratedLevelInfo levelInfo)
+    {
+        StartCoroutine(DownloadUserGeneratedLevelAsync(levelInfo));
     }
 
     public void GenerateUniqueLevelID(UserGeneratedLevelData levelData, UserGeneratedLevelInfo levelInfo, Action<UserGeneratedLevelData, UserGeneratedLevelInfo, string> callback)
@@ -99,8 +101,9 @@ public class FirebaseManager : Singleton<FirebaseManager> {
     {
         byte[] custom_bytes = null;
         FirebaseStorage storage = FirebaseStorage.DefaultInstance;
-        var data_ref_url = "gs://qube-4b14f.appspot.com/user-generated-levels/" + levelcode + "bla" + ".lvl";
+        var data_ref_url = "gs://qube-4b14f.appspot.com/user-generated-levels/" + levelcode + ".lvl";
         StorageReference data_ref = storage.GetReferenceFromUrl(data_ref_url);
+        string downloadURL = "";
 
         Dictionary<string, UserGeneratedLevelInfo> levelInfos = StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList();
         if (levelInfos.ContainsKey(levelInfo.LevelCode))
@@ -141,20 +144,19 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                         {
                             // Metadata contains file metadata such as size, content-type, and download URL.
                             StorageMetadata metadata = task.Result;
-                            string download_url = metadata.DownloadUrl.ToString();
+                            downloadURL = metadata.DownloadUrl.ToString();
                             Debug.Log("Finished uploading...");
-                            Debug.Log("download url = " + download_url);
+
+                            //FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
+                            Debug.Log("download url = " + downloadURL);
+                            levelInfo.LevelDataURL = downloadURL;
+                            levelInfos.FirstOrDefault(val => val.Key == levelcode).Value.LevelDataURL = downloadURL;
+                            string json = JsonUtility.ToJson(levelInfo);
+                            DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
+                            var childKey = reference.Child("Levels").Push().Key;
+                            reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
                         }
                     });
-
-
-                    //FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
-                    string json = JsonUtility.ToJson(levelInfo);
-
-                    DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
-
-                    var childKey = reference.Child("Levels").Push().Key;
-                    reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
                 });
 
             });

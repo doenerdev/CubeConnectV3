@@ -13,6 +13,9 @@ public class FirebaseAuthentication : Singleton<FirebaseAuthentication>
 {
     public Text errorText;
 
+    public const string DESKTOP_USER_ID = "XYYZ";
+    public const string DESKTOP_USER_USERNAME = "DesktopUser";
+
     private FirebaseAuth _authenticationInstance;
     private FirebaseAuthenticationForm _currentAuthenticationForm;
     private FirebaseUserInfo _currentUserInfo;

@@ -77,9 +77,6 @@ public class LevelBrowser : Singleton<LevelBrowser>
     public void SortCategoryDropdownChanged(int value)
     {
         LevelBrowserSortCategory newSortCategory = (LevelBrowserSortCategory) value;
-        Debug.Log(_currentSortCategory == newSortCategory);
-        Debug.Log(newSortCategory);
-        Debug.Log(_currentSortCategory);
         if (_currentSortCategory == newSortCategory)
         {
             _currentSortType = _currentSortType == LevelBrowserSortType.Ascending ? LevelBrowserSortType.Descending : LevelBrowserSortType.Ascending;
@@ -102,8 +99,6 @@ public class LevelBrowser : Singleton<LevelBrowser>
         {
             qtyLevels++;
         }
-        Debug.Log(_currentSortCategory);
-        Debug.Log(SortCategoryDataType(_currentSortCategory));
         switch (SortCategoryDataType(_currentSortCategory))
         {
             case LevelBrowserCategoryDataType.Integer:
@@ -148,7 +143,6 @@ public class LevelBrowser : Singleton<LevelBrowser>
 
     public void DownloadingLevelInfosCompleteDouble(List<DataSnapshot> data, double newStartIndex, int pageIndex, string lastEntryKey = null)
     {
-        Debug.Log("new startIndex:" + newStartIndex);
         if (pageIndex < 0) return;
         _alreadyDownloadedIndices.Add(pageIndex);
 
@@ -169,7 +163,6 @@ public class LevelBrowser : Singleton<LevelBrowser>
 
         if (pageIndex == 0)
         {
-            Debug.Log(pageIndex);
             DownloadLeveInfosForPage(_lastPageIndex + 1);
         }
     }
@@ -196,15 +189,8 @@ public class LevelBrowser : Singleton<LevelBrowser>
 
         if (pageIndex == 0)
         {
-            Debug.Log(pageIndex);
             DownloadLeveInfosForPage(_lastPageIndex + 1);
         }
-
-        /*foreach (var dataSnapshot in data)
-        {
-            Debug.Log(dataSnapshot.Child("AuthorName").Value);
-            Debug.Log("-----------------------------------");
-        }*/
     }
 
     public LevelBrowserCategoryDataType SortCategoryDataType(LevelBrowserSortCategory sortCategory)

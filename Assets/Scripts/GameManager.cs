@@ -45,7 +45,7 @@ public class GameManager : Singleton<GameManager>
     }
     public string DownloadedUserLevelsDataPath
     {
-        get { return DownloadedUserLevelsDataPath; }
+        get { return _downloadedUserLevelsDataPath; }
     }
 
     protected void Awake()
