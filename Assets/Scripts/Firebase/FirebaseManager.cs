@@ -17,6 +17,7 @@ using UnityEngine;
 public class FirebaseManager : Singleton<FirebaseManager> {
 
     public FirebaseAuthentication fbAuth;
+    public FirebaseApp app;
     public LevelBrowserSortCategory SortCategory;
     public LevelBrowserSortType SortType;
     public string StartIndex;
@@ -34,13 +35,14 @@ public class FirebaseManager : Singleton<FirebaseManager> {
 
         StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolderAsync(GameManager.Instance.UserLevelsDataPath);*/
         base.Awake();
-        FirebaseApp.DefaultInstance.SetEditorDatabaseUrl(
-        "https://qube-4b14f.firebaseio.com/");
+        FirebaseApp.DefaultInstance.SetEditorDatabaseUrl("https://qube-4b14f.firebaseio.com/");
+       
 
         DontDestroyOnLoad(this);
         Debug.Log("Done Firebase");
-
     }
+
+
 
     public void FirebaseConnectionChanged(object sender, ValueChangedEventArgs e)
     {
@@ -53,17 +55,80 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         WWW file = new WWW(levelInfo.LevelDataURL);
         yield return file;
         Debug.Log("Downlaoded file");
-
+        LevelBrowser.Instance.errorText.text = "Dwonloaded file";
         /*levelInfo.FileLocation = GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelcode + ".lvl";
 
         Directory.CreateDirectory(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", ""));
         File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelcode + ".lvl", file.bytes);*/
         StageAndLevelDataManager.Instance.SaveDownloadedUserGeneratedLevel(levelInfo, file.bytes);
+
+        FirebaseDatabase.DefaultInstance.GetReference("Levels").Child(levelInfo.DBNodeKey).Child("QtyDownloads").GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+        {
+            if (task.IsCompleted)
+            {
+                FirebaseDatabase.DefaultInstance.GetReference("Levels").Child(levelInfo.DBNodeKey).Child("QtyDownloads").SetValueAsync(int.Parse(task.Result.Value.ToString())+1);
+            }
+            else
+            {
+                //report error
+            }
+        });
+
     }
 
     public void DownloadUserGeneratedLevel(UserGeneratedLevelInfo levelInfo)
     {
+        LevelBrowser.Instance.errorText.text = "Dwonloaded started";
         StartCoroutine(DownloadUserGeneratedLevelAsync(levelInfo));
+    }
+
+    public void RateUserGeneratedLevel(UserGeneratedLevelInfo levelInfo, int rating)
+    {
+        Debug.Log(FirebaseDatabase.DefaultInstance.GetReference("Levels").Child(levelInfo.DBNodeKey).ToString()); 
+        FirebaseDatabase.DefaultInstance.GetReference("Level_Ratings").OrderByKey().EqualTo(levelInfo.LevelCode + "_" + FirebaseAuthentication.Instance.CurrentUserInfo.UserID).GetValueAsync().ContinueWith((Task<DataSnapshot> task) =>
+        {
+            if (task.IsFaulted || task.IsCanceled)
+            {
+                UnityMainThreadDispatcher.Enqueue(() => { Debug.LogError("Error Generating UID"); });
+            }
+            else if (task.IsCompleted)
+            {
+                if (task.Result.Exists)
+                {
+                    UnityMainThreadDispatcher.Enqueue(() => { Debug.Log("Already exists"); });
+                }
+                else
+                {
+                    FirebaseDatabase.DefaultInstance.GetReference("Levels").Child(levelInfo.DBNodeKey).GetValueAsync().ContinueWith((Task<DataSnapshot> ratingTask) =>
+                    {
+                        if (ratingTask.IsFaulted || ratingTask.IsCanceled)
+                        {
+                            UnityMainThreadDispatcher.Enqueue(() => { Debug.LogError("Error Generating UID"); });
+                        }
+                        else if (ratingTask.IsCompleted)
+                        {
+                            if (ratingTask.Result.ChildrenCount <= 0)
+                            {
+                                UnityMainThreadDispatcher.Enqueue(() => { Debug.Log("Error no children"); });
+                            }
+                            else
+                            {
+                                double currentRating = double.Parse(ratingTask.Result.Child("UserRating").Value.ToString());
+                                int qtyRatings = int.Parse(ratingTask.Result.Child("QtyRatings").Value.ToString());
+                                UnityMainThreadDispatcher.Enqueue(() => { Debug.Log("Got Data"); });
+                                double ratingSum = currentRating * qtyRatings;
+                                ratingSum += rating;
+                                currentRating = ratingSum / (qtyRatings + 1);
+                                FirebaseDatabase.DefaultInstance.GetReference("Levels/" + levelInfo.DBNodeKey).Child("UserRating").SetValueAsync(currentRating);
+                                FirebaseDatabase.DefaultInstance.GetReference("Levels/" + levelInfo.DBNodeKey).Child("QtyRatings").SetValueAsync((qtyRatings + 1));
+                                FirebaseDatabase.DefaultInstance.GetReference("Level_Ratings").Child(levelInfo.LevelCode + "_" + FirebaseAuthentication.Instance.CurrentUserInfo.UserID).SetValueAsync(true);
+                                UnityMainThreadDispatcher.Enqueue(() => { Debug.Log("Done"); });
+                            }
+                        }
+                    });
+                }
+            }
+        });    
     }
 
     public void GenerateUniqueLevelID(UserGeneratedLevelData levelData, UserGeneratedLevelInfo levelInfo, Action<UserGeneratedLevelData, UserGeneratedLevelInfo, string> callback)
@@ -103,7 +168,6 @@ public class FirebaseManager : Singleton<FirebaseManager> {
         FirebaseStorage storage = FirebaseStorage.DefaultInstance;
         var data_ref_url = "gs://qube-4b14f.appspot.com/user-generated-levels/" + levelcode + ".lvl";
         StorageReference data_ref = storage.GetReferenceFromUrl(data_ref_url);
-        string downloadURL = "";
 
         Dictionary<string, UserGeneratedLevelInfo> levelInfos = StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList();
         if (levelInfos.ContainsKey(levelInfo.LevelCode))
@@ -144,16 +208,18 @@ public class FirebaseManager : Singleton<FirebaseManager> {
                         {
                             // Metadata contains file metadata such as size, content-type, and download URL.
                             StorageMetadata metadata = task.Result;
-                            downloadURL = metadata.DownloadUrl.ToString();
                             Debug.Log("Finished uploading...");
-
-                            //FirebaseLevelData fbLevelData = new FirebaseLevelData(levelData, data_ref_url);
-                            Debug.Log("download url = " + downloadURL);
-                            levelInfo.LevelDataURL = downloadURL;
-                            levelInfos.FirstOrDefault(val => val.Key == levelcode).Value.LevelDataURL = downloadURL;
-                            string json = JsonUtility.ToJson(levelInfo);
+                            Debug.Log("download url = " + metadata.DownloadUrl.AbsoluteUri);
                             DatabaseReference reference = FirebaseDatabase.DefaultInstance.RootReference;
                             var childKey = reference.Child("Levels").Push().Key;
+
+                            levelInfo.LevelDataURL = metadata.DownloadUrl.AbsoluteUri;
+                            levelInfo.Online = true;
+                            levelInfo.DBNodeKey = childKey;
+                            levelInfos.FirstOrDefault(val => val.Key == levelcode).Value.LevelDataURL = metadata.DownloadUrl.AbsoluteUri;
+                            levelInfos.FirstOrDefault(val => val.Key == levelcode).Value.Online = true;
+                            levelInfos.FirstOrDefault(val => val.Key == levelcode).Value.DBNodeKey = childKey;
+                            string json = JsonUtility.ToJson(levelInfo);
                             reference.Child("Levels").Child(childKey).SetRawJsonValueAsync(json);
                         }
                     });
@@ -326,6 +392,8 @@ public class FirebaseManager : Singleton<FirebaseManager> {
 
     public void GetPaginatedLevelInfos(LevelBrowserSortCategory sortCategory, LevelBrowserSortType sortType, int startIndex, int range, int pageIndex, string lastEntryKey, Action<List<DataSnapshot>, int, int, string> callback)
     {
+        
+        
         string sortChildNode = "Date"; //default sort category
         Debug.Log(startIndex);
         if (sortType == LevelBrowserSortType.Ascending)

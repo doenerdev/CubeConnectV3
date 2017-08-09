@@ -94,9 +94,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
 
     public void RemoveUserGeneratedLevel(string levelcode)
     {
-        var levelInfo = _userGeneratedLevelInfoHolder.LevelInfos.Where(e => e.Value.LevelCode == levelcode)
-                .Select(e => (KeyValuePair<string, UserGeneratedLevelInfo>?)e)
-                .FirstOrDefault();
+        var levelInfo = _userGeneratedLevelInfoHolder.LevelInfos.Where(e => e.Value.LevelCode == levelcode).Select(e => (KeyValuePair<string, UserGeneratedLevelInfo>?)e).FirstOrDefault();
 
         if (levelInfo != null)
         {
@@ -106,6 +104,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
             {
                 Debug.Log("Deleted File");
                 File.Delete(levelInfo.Value.Value.FileLocation.Replace("file:///", ""));
+                SaveUserGeneratedLevelInfoHolder();
             }
             else
             {
@@ -118,12 +117,16 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     {
         Task.Run(() =>
         {
+
+            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info Holder beginning..."; });
             Directory.CreateDirectory(GameManager.Instance.UserLevelsInfoFolderPath.Replace("file:///", ""));      
             FileStream stream = new FileStream(GameManager.Instance.UserLevelsInfoPath.Replace("file:///", ""), FileMode.Create);
             ProtoBuf.Serializer.Serialize<UserGeneratedLevelInfoHolder>(stream, _userGeneratedLevelInfoHolder);
             stream.Close();
             RaiseSavingUserGeneratedLevelDataHolderComplete("Saving UserGeneratedLevelDataHolder complete");
 
+            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info HDone..."; });
+            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = _userGeneratedLevelInfoHolder.LevelInfos.Count.ToString(); });
             if (callback != null)
             {
                 callback();
@@ -135,10 +138,17 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     {
         Task.Run(() =>
         {
+            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving file to disk"; });
+      
             levelInfo.FileLocation = GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl";
-            _userGeneratedLevelInfoHolder.LevelInfos.Add(levelInfo.LevelCode, levelInfo); //TODO make a security check if the levelcode already exists in the dic
+
+
+            _userGeneratedLevelInfoHolder.LevelInfos.Add(levelInfo.LevelCode, levelInfo);
+
             Directory.CreateDirectory(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", ""));
             File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl", file);
+            
+            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info Holder"; });
             SaveUserGeneratedLevelInfoHolder();
         });
     }
@@ -322,15 +332,20 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         {
             return
           _userGeneratedLevelInfoHolder.LevelInfos.Where(
-              x => x.Value.AuthorID != FirebaseAuthentication.DESKTOP_USER_ID)
+              x => x.Value.AuthorID != FirebaseAuthentication.DESKTOP_USER_ID && x.Value.Online == true)
               .ToDictionary(x => x.Key, x => x.Value);
         }
         else
         {
             return
           _userGeneratedLevelInfoHolder.LevelInfos.Where(
-              x => x.Value.AuthorID != FirebaseAuthentication.Instance.CurrentUserInfo.UserID)
+              x => x.Value.AuthorID != FirebaseAuthentication.DESKTOP_USER_ID && x.Value.Online == true)
               .ToDictionary(x => x.Key, x => x.Value);
+            //TODO change back later
+            /*return
+          _userGeneratedLevelInfoHolder.LevelInfos.Where(
+              x => x.Value.AuthorID != FirebaseAuthentication.Instance.CurrentUserInfo.UserID && x.Value.Online == true)
+              .ToDictionary(x => x.Key, x => x.Value);*/
         }      
     }
 

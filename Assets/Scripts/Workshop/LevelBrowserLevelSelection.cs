@@ -8,18 +8,18 @@ using UnityEngine.UI;
 public class LevelBrowserLevelSelection : MonoBehaviour {
 
 
-    private int _pageIndex;
-    private List<LevelBrowserLevelTile> _levelTiles;
+    protected int _pageIndex;
+    protected List<LevelBrowserLevelTile> _levelTiles;
 
-    [SerializeField] private RectTransform _rectTransform;
-    [SerializeField] private Text _nameText;
-    [SerializeField] private GameObject _levelTilesContainer;
+    [SerializeField] protected RectTransform _rectTransform;
+    [SerializeField] protected Text _nameText;
+    [SerializeField] protected GameObject _levelTilesContainer;
 
     public int PageIndex
     {
         get { return _pageIndex; }
     }
-    public List<LevelBrowserLevelTile> LevelTiles
+    public virtual List<LevelBrowserLevelTile> LevelTiles
     {
         get { return _levelTiles; }
     }
@@ -38,7 +38,7 @@ public class LevelBrowserLevelSelection : MonoBehaviour {
         return levelSelection;
     }
 
-    public void CreateLevelTiles(List<DataSnapshot> data)
+    public virtual void CreateLevelTiles(List<DataSnapshot> data)
     {
         foreach (var dataSnapshot in data)
         {

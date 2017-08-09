@@ -83,8 +83,10 @@ public class LevelEditorUser : LevelEditor {
 
             if (Application.isEditor == false)
             {
-                _currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.Instance.CurrentUserInfo.Username;
-                _currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.Instance.CurrentUserInfo.UserID;
+                _currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.DESKTOP_USER_ID;
+                _currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.DESKTOP_USER_USERNAME;
+                //_currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.Instance.CurrentUserInfo.Username; //TODO CHANGE THIS LATER
+                //_currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.Instance.CurrentUserInfo.UserID;
             }
             else
             {

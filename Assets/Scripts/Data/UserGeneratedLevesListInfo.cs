@@ -49,4 +49,8 @@ public class UserGeneratedLevelInfo
     public string FileLocation;
     [ProtoMember(12)]
     public string LevelName;
+    [ProtoMember(13)]
+    public bool Online = false;
+    [ProtoMember(14)]
+    public string DBNodeKey;
 }

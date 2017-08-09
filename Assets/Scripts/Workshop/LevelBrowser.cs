@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
+using Firebase;
 using Firebase.Database;
 using UnityEngine;
 using UnityEngine.UI;
@@ -27,6 +28,8 @@ public class LevelBrowser : Singleton<LevelBrowser>
     [SerializeField] private LevelBrowserPageSelection _levelBrowserPageSelection;
     [SerializeField] private Dropdown _sortCategoryDropdown;
 
+    public Text errorText;
+
     public LevelBrowserSortCategory CurrentSortCategory
     {
         get { return _currentSortCategory; }
@@ -38,6 +41,8 @@ public class LevelBrowser : Singleton<LevelBrowser>
 
     private void Start()
     {
+        
+
         _alreadyDownloadedIndices = new List<int>();
         _levelBrowserPageSelection.Initialize(_parentCanvas);
 
@@ -222,6 +227,11 @@ public class LevelBrowser : Singleton<LevelBrowser>
     public void ShowDetailPage(LevelBrowserLevelTile tile)
     {
         LevelBrowserDetailView.Create(tile.LevelInfo);
+    }
+
+    public void BackToWorkshop()
+    {
+        GameManager.Instance.ShowWorkshop();
     }
 }
 

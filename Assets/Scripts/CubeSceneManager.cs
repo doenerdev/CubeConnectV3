@@ -48,6 +48,11 @@ public class CubeSceneManager : Singleton<CubeSceneManager> {
         StartCoroutine(LoadLevelAsync("LevelBrowser"));
     }
 
+    public void ShowWorkshopDownloadedLevelBrowser()
+    {
+        StartCoroutine(LoadLevelAsync("DownloadedLevelBrowser"));
+    }
+
     private IEnumerator UnloadSceneAsync(string sceneName)
     {
         _asyncUnloadOperation = SceneManager.UnloadSceneAsync(sceneName);

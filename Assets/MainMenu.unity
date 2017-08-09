@@ -521,9 +521,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Nutzertest: 0
-  _productionLevelsDataPath: 
-  _userLevelsDataPath: 
-  _userLevelsInfoPath: 
   _gameState: 0
 --- !u!114 &1002665925
 MonoBehaviour:

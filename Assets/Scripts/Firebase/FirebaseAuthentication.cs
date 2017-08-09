@@ -22,7 +22,14 @@ public class FirebaseAuthentication : Singleton<FirebaseAuthentication>
 
     public FirebaseUserInfo CurrentUserInfo
     {
-        get { return _currentUserInfo; }
+        get
+        {
+            if (Application.isEditor)
+            {
+                return new FirebaseUserInfo(DESKTOP_USER_ID, "mail@mail.com", DESKTOP_USER_USERNAME, AuthentifciationType.Firebase);
+            }
+            return _currentUserInfo;
+        }
     }
 
     private void Awake()

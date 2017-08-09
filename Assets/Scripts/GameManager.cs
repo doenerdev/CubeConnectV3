@@ -60,9 +60,9 @@ public class GameManager : Singleton<GameManager>
             //_userLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/UserLevels/Own";
             //_downloadedUserLevelsDataPath = "jar:file://" + Application.dataPath + "!/assets/Levels/UserLevels/Downloaded";
             //_userLevelsInfoPath = "jar:file://" + Application.dataPath + "!/assets/Levels/userLevels.info";
-            _userLevelsDataPath = "jar:file://" + Application.persistentDataPath + "!/assets/Levels/UserLevels/Own";
-            _downloadedUserLevelsDataPath = "jar:file://" + Application.persistentDataPath + "!/assets/Levels/UserLevels/Downloaded";
-            _userLevelsInfoFolderPath = "jar:file://" + Application.persistentDataPath + "!/assets/Levels/";
+            _userLevelsDataPath = Application.persistentDataPath + "/Levels/UserLevels/Own";
+            _downloadedUserLevelsDataPath = Application.persistentDataPath + "/Levels/UserLevels/Downloaded";
+            _userLevelsInfoFolderPath = Application.persistentDataPath + "/Levels/";
             _userLevelsInfoPath = _userLevelsInfoFolderPath + "userLevels.info";
         }
         else
@@ -153,6 +153,12 @@ public class GameManager : Singleton<GameManager>
         CubeSceneManager.Instance.ShowWorkshopStartpage();
     }
 
+    public void ShowWorkshopDownloadedLevelBrowser()
+    {
+        _gameState = GameState.WorkshopDownloadedLevelBrowser;
+        CubeSceneManager.Instance.ShowWorkshopDownloadedLevelBrowser();
+    }
+
     public void ShowWorkshopLevelBrowser()
     {
         _gameState = GameState.WorkshopLevelBrowser;
@@ -223,4 +229,5 @@ public enum GameState
     LevelEditorUser,
     WorkshopStartPage,
     WorkshopLevelBrowser,
+    WorkshopDownloadedLevelBrowser,
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Firebase.Database;
@@ -6,17 +7,16 @@ using UnityEngine.UI;
 
 public class LevelBrowserLevelTile : MonoBehaviour
 {
-
-    private LevelBrowserLevelSelection _parentLevelSelection;
-
-    [SerializeField] private GameObject _ratingStarPrefab;
-    [SerializeField] private GameObject _noRatingStarPrefab;
-    [SerializeField] private Image _tileBackground;
-    [SerializeField] private Color _unlockedTileColor;
-    [SerializeField] private Color _lockedTileColor;
-    [SerializeField] private GameObject _ratingStarsContainer;
-    [SerializeField] private Text _levelName;
-    [SerializeField] private Text _ratingText;
+    [SerializeField]
+    private GameObject _ratingStarPrefab;
+    [SerializeField]
+    private GameObject _noRatingStarPrefab;
+    [SerializeField]
+    private GameObject _ratingStarsContainer;
+    [SerializeField]
+    private Text _levelName;
+    [SerializeField]
+    private Text _ratingText;
 
     private UserGeneratedLevelInfo _levelInfo;
     private string _authorID;
@@ -39,7 +39,6 @@ public class LevelBrowserLevelTile : MonoBehaviour
     {
         GameObject go = Instantiate(Resources.Load("LevelBrowser/LevelBrowserTile")) as GameObject;
         LevelBrowserLevelTile levelTile = go.GetComponent<LevelBrowserLevelTile>();
-        levelTile._parentLevelSelection = levelSelection;
         levelTile._levelName.text = data.Child("AuthorName").Value.ToString();
         levelTile._ratingText.text = data.Child("UserRating").Value.ToString();
         levelTile._authorID = data.Child("AuthorID").Value.ToString();
@@ -62,6 +61,8 @@ public class LevelBrowserLevelTile : MonoBehaviour
         _levelInfo.QtyDownloads = int.Parse(data.Child("QtyDownloads").Value.ToString());
         _levelInfo.Date = int.Parse(data.Child("Date").Value.ToString());
         _levelInfo.FileLocation = data.Child("FileLocation").Value.ToString();
+        _levelInfo.Online = Convert.ToBoolean(data.Child("Online").Value.ToString());
+        _levelInfo.DBNodeKey = data.Child("DBNodeKey").Value.ToString();
         _levelInfo.LevelName = data.Child("LevelName").Value.ToString();
     }
 

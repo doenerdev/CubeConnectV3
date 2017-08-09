@@ -6,7 +6,7 @@ using UnityEngine;
 public class LevelBrowserPageSelection : MonoBehaviour
 {
 
-    private List<LevelBrowserLevelSelection> _pages;
+    protected List<LevelBrowserLevelSelection> _pages;
 
     [SerializeField] private LevelBrowserScrollView _levelBrowserScrollView;
 
