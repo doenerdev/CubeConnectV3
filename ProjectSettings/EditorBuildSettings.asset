@@ -21,6 +21,8 @@ EditorBuildSettings:
     path: Assets/LevelBrowser.unity
   - enabled: 1
     path: Assets/DownloadedLevelBrowser.unity
+  - enabled: 1
+    path: Assets/WorkshopPlayLevelBrowser.unity
   - enabled: 0
     path: Assets/AuthTest.unity
   - enabled: 0

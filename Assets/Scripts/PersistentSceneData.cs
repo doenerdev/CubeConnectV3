@@ -18,4 +18,5 @@ public static class PersistentSceneData
     public static int CurrentLevelIndex { get; set; }
     public static MainMenu MainMenu { get; set; }
     public static GameObject MainMenuSceneContainer { get; set; }
+    public static UserGeneratedLevelData CurrentUserGeneratedLevelData { get; set; }
 }

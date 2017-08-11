@@ -64,16 +64,6 @@ public class DownloadedLevelBrowser : Singleton<DownloadedLevelBrowser> {
 
         errorText.text = "Count: " + levelInfos.Count;
 
-        /*foreach (var keyValuePair in levelInfos)
-        {
-            Debug.Log(keyValuePair.Value.AuthorName);
-            Debug.Log(keyValuePair.Value.LevelName);
-            Debug.Log(keyValuePair.Value.Online);
-            Debug.Log(keyValuePair.Value.DBNodeKey);
-            Debug.Log(keyValuePair.Value.UserRating);
-            Debug.Log("----");
-        }*/
-
         for (int i = 0; i < levelInfos.Count; i += QTY_LEVELS_PER_PAGE)
         {
             _levelBrowserPageSelection.AddPage();
@@ -141,120 +131,6 @@ public class DownloadedLevelBrowser : Singleton<DownloadedLevelBrowser> {
     {
         GameManager.Instance.ShowWorkshop();
     }
-
-    /*public void DownloadingLevelInfosCompleteInteger(List<DataSnapshot> data, int newStartIndex, int pageIndex, string lastEntryKey = null)
-    {
-        if (pageIndex < 0) return;
-        _alreadyDownloadedIndices.Add(pageIndex);
-
-        if (data.Count < 1)
-        {
-            _levelBrowserPageSelection.RemovePage(pageIndex);
-            return;
-        }
-
-        _levelBrowserPageSelection.Pages[pageIndex].CreateLevelTiles(data);
-        _integerNumericStartIndex = newStartIndex;
-        _lastPageIndex++;
-
-        if (lastEntryKey != null)
-        {
-            _lastEntryKey = lastEntryKey;
-        }
-
-        if (pageIndex == 0)
-        {
-            DownloadLeveInfosForPage(_lastPageIndex + 1);
-        }
-    }
-
-    private void Update()
-    {
-        if (Input.GetKey("d"))
-        {
-            // FirebaseManager.Instance.DummyLoad();
-        }
-    }
-
-
-
-    public void DownloadLeveInfosForPage(int pageIndex)
-    {
-        if (pageIndex < 0 || _alreadyDownloadedIndices.Contains(pageIndex)) return;
-
-        int qtyLevels = QTY_LEVELS_PER_PAGE;
-        if (pageIndex > 0)
-        {
-            qtyLevels++;
-        }
-        switch (SortCategoryDataType(_currentSortCategory))
-        {
-            case LevelBrowserCategoryDataType.Integer:
-                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _integerNumericStartIndex, qtyLevels, pageIndex, _lastEntryKey, DownloadingLevelInfosCompleteInteger);
-                break;
-            case LevelBrowserCategoryDataType.Double:
-                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _doubleNumericStartIndex, qtyLevels, pageIndex, _lastEntryKey, DownloadingLevelInfosCompleteDouble);
-                break;
-            case LevelBrowserCategoryDataType.String:
-                FirebaseManager.Instance.GetPaginatedLevelInfos(_currentSortCategory, _currentSortType, _aplhabeticStartIndex, qtyLevels, pageIndex, _lastEntryKey, DownloadingLevelInfosCompleteAlphabetical);
-                break;
-        }
-
-        _levelBrowserPageSelection.AddPage();
-    }
-
-
-    public void DownloadingLevelInfosCompleteDouble(List<DataSnapshot> data, double newStartIndex, int pageIndex, string lastEntryKey = null)
-    {
-        if (pageIndex < 0) return;
-        _alreadyDownloadedIndices.Add(pageIndex);
-
-        if (data.Count < 1)
-        {
-            _levelBrowserPageSelection.RemovePage(pageIndex);
-            return;
-        }
-
-        _levelBrowserPageSelection.Pages[pageIndex].CreateLevelTiles(data);
-        _doubleNumericStartIndex = newStartIndex;
-        _lastPageIndex++;
-
-        if (lastEntryKey != null)
-        {
-            _lastEntryKey = lastEntryKey;
-        }
-
-        if (pageIndex == 0)
-        {
-            DownloadLeveInfosForPage(_lastPageIndex + 1);
-        }
-    }
-
-    public void DownloadingLevelInfosCompleteAlphabetical(List<DataSnapshot> data, string newStartIndex, int pageIndex, string lastEntryKey = null)
-    {
-        if (pageIndex < 0) return;
-        _alreadyDownloadedIndices.Add(pageIndex);
-
-        if (data.Count < 1)
-        {
-            _levelBrowserPageSelection.RemovePage(pageIndex);
-            return;
-        }
-
-        _levelBrowserPageSelection.Pages[pageIndex].CreateLevelTiles(data);
-        _aplhabeticStartIndex = newStartIndex;
-        _lastPageIndex++;
-
-        if (lastEntryKey != null)
-        {
-            _lastEntryKey = lastEntryKey;
-        }
-
-        if (pageIndex == 0)
-        {
-            DownloadLeveInfosForPage(_lastPageIndex + 1);
-        }
-    }*/
 
     public void SetSortType(LevelBrowserSortType sortType)
     {

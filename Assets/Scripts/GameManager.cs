@@ -141,6 +141,13 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    public void LoadWorkshopCubeGameplayLevel(UserGeneratedLevelData levelData)
+    {
+        _gameState = GameState.WorkshopCubeGameplay;
+        PersistentSceneData.CurrentUserGeneratedLevelData = levelData;
+        CubeSceneManager.Instance.LoadWorkshopCubeGameplayLevel(levelData);
+    }
+
     public void ShowMainMenu()
     {
         _gameState = GameState.MainMenu;
@@ -163,6 +170,12 @@ public class GameManager : Singleton<GameManager>
     {
         _gameState = GameState.WorkshopLevelBrowser;
         CubeSceneManager.Instance.ShowWorkshopLevelBrowser();
+    }
+
+    public void ShowWorkshopPlayLevelBrowser()
+    {
+        _gameState = GameState.WorkshopPlayLevelBrowser;
+        CubeSceneManager.Instance.ShowWorkshopPlayLevelBrowser();
     }
 
     public void ShowWorkshopLevelEditor()
@@ -224,10 +237,12 @@ public enum GameState
     MainMenuStageAndLevelSelection,
     LevelMenu,
     CubeGameplay,
+    WorkshopCubeGameplay,
     CubePauseMenu,
     LevelEditor,
     LevelEditorUser,
     WorkshopStartPage,
     WorkshopLevelBrowser,
     WorkshopDownloadedLevelBrowser,
+    WorkshopPlayLevelBrowser,
 }

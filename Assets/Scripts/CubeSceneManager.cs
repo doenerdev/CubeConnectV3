@@ -53,6 +53,11 @@ public class CubeSceneManager : Singleton<CubeSceneManager> {
         StartCoroutine(LoadLevelAsync("DownloadedLevelBrowser"));
     }
 
+    public void ShowWorkshopPlayLevelBrowser()
+    {
+        StartCoroutine(LoadLevelAsync("WorkshopPlayLevelBrowser"));
+    }
+
     private IEnumerator UnloadSceneAsync(string sceneName)
     {
         _asyncUnloadOperation = SceneManager.UnloadSceneAsync(sceneName);
@@ -78,6 +83,11 @@ public class CubeSceneManager : Singleton<CubeSceneManager> {
     {
         PersistentSceneData.CurrentStageIndex = stageIndex;
         PersistentSceneData.CurrentLevelIndex = levelIndex;
+        StartCoroutine(LoadLevelAsync("CubeGameplay"));
+    }
+
+    public void LoadWorkshopCubeGameplayLevel(UserGeneratedLevelData levelData)
+    {
         StartCoroutine(LoadLevelAsync("CubeGameplay"));
     }
 

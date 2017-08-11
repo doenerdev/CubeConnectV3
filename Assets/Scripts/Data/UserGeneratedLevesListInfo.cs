@@ -53,4 +53,8 @@ public class UserGeneratedLevelInfo
     public bool Online = false;
     [ProtoMember(14)]
     public string DBNodeKey;
+    [ProtoMember(15)]
+    public bool Played;
+    [ProtoMember(16)]
+    public long LocalDate;
 }

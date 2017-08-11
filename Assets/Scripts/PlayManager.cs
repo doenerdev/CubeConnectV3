@@ -54,7 +54,6 @@ public class PlayManager : Singleton<PlayManager>
             _textQtyCurrentConnections.text = qty.ToString();
             if (qty >= Cube.Instance.NecessaryConnectionsToWin)
             {
-
                 UpdateCurrentLevelStatus();
 
                 //win condition reached, do something (e.g. play animation, show rating stars etc...)
@@ -88,6 +87,10 @@ public class PlayManager : Singleton<PlayManager>
                     GameManager.Instance.ShowStageAndLevelSelectionByIndex(PersistentSceneData.CurrentStageIndex);
                 }
             }
+        }
+        else if (GameManager.Instance.GameState == GameState.WorkshopCubeGameplay)
+        {
+            
         }
     }
 

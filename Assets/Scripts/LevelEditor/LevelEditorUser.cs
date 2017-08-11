@@ -179,6 +179,9 @@ public class LevelEditorUser : LevelEditor {
         StageAndLevelDataManager.Instance.SaveUserGeneratedLevel(_currentlySelectedLevelData, _currentlySelectedLevelInfo.LevelCode,
             dataPath =>
             {
+                _currentlySelectedLevelInfo.Played = false;
+                _currentlySelectedLevelInfo.LocalDate = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+                _currentlySelectedLevelInfo.LocalDate = (long)(DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
                 _currentlySelectedLevelInfo.FileLocation = dataPath;
                 StageAndLevelDataManager.Instance.SaveUserGeneratedLevelInfoHolder();
             });

@@ -117,16 +117,15 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     {
         Task.Run(() =>
         {
-
-            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info Holder beginning..."; });
+            //UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info Holder beginning..."; });
             Directory.CreateDirectory(GameManager.Instance.UserLevelsInfoFolderPath.Replace("file:///", ""));      
             FileStream stream = new FileStream(GameManager.Instance.UserLevelsInfoPath.Replace("file:///", ""), FileMode.Create);
             ProtoBuf.Serializer.Serialize<UserGeneratedLevelInfoHolder>(stream, _userGeneratedLevelInfoHolder);
             stream.Close();
             RaiseSavingUserGeneratedLevelDataHolderComplete("Saving UserGeneratedLevelDataHolder complete");
 
-            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info HDone..."; });
-            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = _userGeneratedLevelInfoHolder.LevelInfos.Count.ToString(); });
+            //UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info HDone..."; });
+            //UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = _userGeneratedLevelInfoHolder.LevelInfos.Count.ToString(); });
             if (callback != null)
             {
                 callback();
@@ -136,20 +135,18 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
 
     public void SaveDownloadedUserGeneratedLevel(UserGeneratedLevelInfo levelInfo, byte[] file)
     {
+        //UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving file to disk"; });    
+        levelInfo.FileLocation = GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl";
+        _userGeneratedLevelInfoHolder.LevelInfos.Add(levelInfo.LevelCode, levelInfo);
+
+        Directory.CreateDirectory(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", ""));
+        File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl", file);
+
+        //UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info Holder"; });
+        SaveUserGeneratedLevelInfoHolder();
         Task.Run(() =>
         {
-            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving file to disk"; });
-      
-            levelInfo.FileLocation = GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl";
-
-
-            _userGeneratedLevelInfoHolder.LevelInfos.Add(levelInfo.LevelCode, levelInfo);
-
-            Directory.CreateDirectory(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", ""));
-            File.WriteAllBytes(GameManager.Instance.DownloadedUserLevelsDataPath.Replace("file:///", "") + "/" + levelInfo.LevelCode + ".lvl", file);
-            
-            UnityMainThreadDispatcher.Enqueue(() => { LevelBrowser.Instance.errorText.text = "Saving Info Holder"; });
-            SaveUserGeneratedLevelInfoHolder();
+           
         });
     }
 
@@ -350,6 +347,15 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
     }
 
     public UserGeneratedLevelInfo GetUserGeneratedLevelInfoByLevelcode(string levelcode)
+    {
+        if (_userGeneratedLevelInfoHolder.LevelInfos.ContainsKey(levelcode))
+        {
+            return _userGeneratedLevelInfoHolder.LevelInfos[levelcode];
+        }
+        return null;
+    }
+
+    public UserGeneratedLevelInfo GetUserGeneratedLevelDataByLevelcode(string levelcode)
     {
         if (_userGeneratedLevelInfoHolder.LevelInfos.ContainsKey(levelcode))
         {

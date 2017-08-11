@@ -32,6 +32,13 @@ public class CubeGameplay : Singleton<CubeGameplay>
             cube.transform.SetParent(transform, false);
             cube.gameObject.SetActive(true);
         }
+        else if (GameManager.Instance.GameState == GameState.WorkshopCubeGameplay)
+        {
+            LevelData levelData = PersistentSceneData.CurrentUserGeneratedLevelData;
+            Cube cube = Cube.Create(levelData);
+            cube.transform.SetParent(transform, false);
+            cube.gameObject.SetActive(true);
+        }
 
         _cubeCameraRotation = MultiTag.FindGameObjectsWithTags(Tags.CubeGameplayCamera)[0].GetComponent<CameraRotation>();
         _cubeCameraRotation.enabled = true;

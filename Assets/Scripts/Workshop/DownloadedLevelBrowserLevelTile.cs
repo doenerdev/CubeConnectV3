@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class DownloadedLevelBrowserLevelTile : MonoBehaviour
 {
-
     [SerializeField] private GameObject _levelTileOptions;
     [SerializeField] private Button _deleteLevelButton;
     [SerializeField] private Button _rateLevelButton;
