@@ -41,7 +41,7 @@ public class PlayManager : Singleton<PlayManager>
 
     public void SetMaxQtyConnections(int qty)
     {
-        if (GameManager.Instance.GameState == GameState.CubeGameplay)
+        if (GameManager.Instance.GameState == GameState.CubeGameplay || GameManager.Instance.GameState == GameState.WorkshopCubeGameplay)
         {
             _textQtyMaxConnections.text = "/" + qty.ToString();
         }
@@ -60,8 +60,7 @@ public class PlayManager : Singleton<PlayManager>
                 bool loadNextLevel = true;
 
                 if (
-                    StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex)
-                        .Levels.Count - 1 > PersistentSceneData.CurrentLevelIndex)
+                    StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex).Levels.Count - 1 > PersistentSceneData.CurrentLevelIndex)
                     //check whether this was the last level in the current stage
                 {
                     PersistentSceneData.CurrentLevelIndex++;
@@ -84,13 +83,37 @@ public class PlayManager : Singleton<PlayManager>
                 }
                 else
                 {
-                    GameManager.Instance.ShowStageAndLevelSelectionByIndex(PersistentSceneData.CurrentStageIndex);
+                    //GameManager.Instance.ShowStageAndLevelSelectionByIndex(PersistentSceneData.CurrentStageIndex);
+                    ReturnToLevelSelectionAfterLeveFinished();
                 }
             }
         }
         else if (GameManager.Instance.GameState == GameState.WorkshopCubeGameplay)
         {
-            
+            _textQtyCurrentConnections.text = qty.ToString();
+            if (qty >= Cube.Instance.NecessaryConnectionsToWin)
+            {
+                ReturnToLevelSelectionAfterLeveFinished();
+            }
+        }
+    }
+
+    public void ReturnToLevelSelectionAfterLeveFinished()
+    {
+        StartCoroutine(InitializeReturnToLevelSelection());
+    }
+
+    private IEnumerator InitializeReturnToLevelSelection()
+    {
+        yield return StartCoroutine(CubeGameplay.Instance.PlayLevelTransitionAnimationIn());
+
+        if (GameManager.Instance.GameState == GameState.CubeGameplay)
+        {
+            GameManager.Instance.ShowStageAndLevelSelectionByIndex(PersistentSceneData.CurrentStageIndex);
+        }
+        else if (GameManager.Instance.GameState == GameState.WorkshopCubeGameplay)
+        {
+            GameManager.Instance.ShowWorkshopPlayLevelBrowser();
         }
     }
 

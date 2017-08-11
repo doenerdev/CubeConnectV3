@@ -54,11 +54,21 @@ public class CubeGameplay : Singleton<CubeGameplay>
         StartCoroutine(InitializeNextLevel());
     }
 
-    IEnumerator InitializeNextLevel()
+    public IEnumerator PlayLevelTransitionAnimationIn()
     {
         PlayManager.Instance.LevelTransitionAnimator.SetTrigger("AnimIn");
         yield return new WaitForSeconds(2);
+    }
 
+    public IEnumerator PlayLevelTransitionAnimationOut()
+    {
+        PlayManager.Instance.LevelTransitionAnimator.SetTrigger("AnimOut");
+        yield return null;
+    }
+
+    IEnumerator InitializeNextLevel()
+    {
+        yield return StartCoroutine(PlayLevelTransitionAnimationIn());
         _cubeCameraRotation = MultiTag.FindGameObjectsWithTags(Tags.CubeGameplayCamera)[0].GetComponent<CameraRotation>();
         _cubeCameraRotation.enabled = false;
         Destroy(Cube.Instance.gameObject);
@@ -72,6 +82,6 @@ public class CubeGameplay : Singleton<CubeGameplay>
         _cubeRotation = Cube.Instance.GetComponent<CubeRotation>();
         _cubeCameraRotation.enabled = true;
 
-        PlayManager.Instance.LevelTransitionAnimator.SetTrigger("AnimOut");
+        yield return StartCoroutine(PlayLevelTransitionAnimationOut());
     }
 }

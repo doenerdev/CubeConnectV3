@@ -13,6 +13,7 @@ public class LevelEditorUser : LevelEditor {
 
     [SerializeField] private LevelEditorUserLevelSelection _levelEditorLevelSelection;
     [SerializeField] private LevelEditorEditLevelUser _levelEditorEditLevelUser;
+    [SerializeField] private LeveEditorLevelBrowser _levelBrowser;
 
     public static LevelEditorUser Instance
     {
@@ -35,8 +36,10 @@ public class LevelEditorUser : LevelEditor {
 
     private void Awake() //TODO Change back to Awake later
     {
-        StageAndLevelDataManager.Instance.LoadingUserGeneratedLevelDataHolderComplete += new EventHandler<EventTextArgs>(LoadedUserGeneratedLevelDataHolder);
-        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolderAsync(GameManager.Instance.UserLevelsDataPath);
+        //StageAndLevelDataManager.Instance.LoadingUserGeneratedLevelDataHolderComplete += new EventHandler<EventTextArgs>(LoadedUserGeneratedLevelDataHolder);
+        //StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolderAsync(GameManager.Instance.UserLevelsDataPath);
+
+        _levelEditorLevelSelection.LoadLevelsIntoScrollView(StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList());
     }
 
     private void LoadedUserGeneratedLevelDataHolder(object sender, EventTextArgs args)
@@ -190,5 +193,10 @@ public class LevelEditorUser : LevelEditor {
     public void UploadLevel(UserGeneratedLevelData levelData)
     {
         //FirebaseManager.Instance.UploadUserGeneratedLevel(levelData, level);
+    }
+
+    public void BackToWorkshop()
+    {
+        GameManager.Instance.ShowWorkshop();
     }
 }

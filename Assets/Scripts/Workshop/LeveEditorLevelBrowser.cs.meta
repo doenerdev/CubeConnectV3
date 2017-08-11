@@ -1,8 +1,7 @@
 fileFormatVersion: 2
-guid: c458749108c846578a73dc0dcbf79c69
-labels:
-- gvh
-- gvh_version-3.0.3
+guid: e4f6b61b8ce529c4b86375181231d3c5
+timeCreated: 1502459513
+licenseType: Free
 MonoImporter:
   serializedVersion: 2
   defaultReferences: []

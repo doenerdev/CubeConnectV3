@@ -1,29 +1,24 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-using Firebase.Database;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class WorkshopPlayLevelBrowser : Singleton<WorkshopPlayLevelBrowser> {
+public class LeveEditorLevelBrowser : MonoBehaviour {
+
     public const int QTY_LEVELS_PER_PAGE = 2;
-    public LevelBrowserPlaySortCategory _currentSortCategory;
+    public LevelBrowserEditorSortCategory _currentSortCategory;
     public LevelBrowserSortType _currentSortType;
 
-
     [SerializeField] private Transform _parentCanvas;
-    [SerializeField] private WorkshopPlayLevelBrowserScrollView _levelBrowserScrollView;
-    [SerializeField] private WorkshopPlayLevelBrowserPageSelection _levelBrowserPageSelection;
+    [SerializeField] private LevelEditorLevelBrowserScrollView _levelBrowserScrollView;
+    [SerializeField] private LevelEditorLevelBrowserPageSelection _levelBrowserPageSelection;
     [SerializeField] private Dropdown _sortCategoryDropdown;
 
     public Text errorText;
 
-    public LevelBrowserPlaySortCategory CurrentSortCategory
+    public LevelBrowserEditorSortCategory CurrentSortCategory
     {
         get { return _currentSortCategory; }
     }
@@ -74,51 +69,26 @@ public class WorkshopPlayLevelBrowser : Singleton<WorkshopPlayLevelBrowser> {
 
     private List<KeyValuePair<string, UserGeneratedLevelInfo>> GetSortedLevelInfos()
     {
-        Dictionary<string, UserGeneratedLevelInfo> ownlevels = StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList();
-        Dictionary<string, UserGeneratedLevelInfo> downloadedLevels = StageAndLevelDataManager.Instance.GetDownloadedUserGeneratedLevelInfosList();
-
         switch (_currentSortCategory)
-        {
-            case LevelBrowserPlaySortCategory.AuthorName:
+        {        
+            case LevelBrowserEditorSortCategory.Date:
                 if (_currentSortType == LevelBrowserSortType.Ascending)
                 {
-                    downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                    return ownlevels.OrderBy(d => d.Value.AuthorName).ToList();
+                    return StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList().OrderBy(d => d.Value.Date).ToList();
                 }
-                downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                return ownlevels.OrderByDescending(d => d.Value.AuthorName).ToList();
-            case LevelBrowserPlaySortCategory.Date:
+                return StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList().OrderByDescending(d => d.Value.Date).ToList();
+            case LevelBrowserEditorSortCategory.LevelName:
                 if (_currentSortType == LevelBrowserSortType.Ascending)
                 {
-                    downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                    return ownlevels.OrderBy(d => d.Value.Date).ToList();
+                    return StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList().OrderBy(d => d.Value.LevelName).ToList();
                 }
-                downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                return ownlevels.OrderByDescending(d => d.Value.Date).ToList();
-            case LevelBrowserPlaySortCategory.LevelName:
+                return StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList().OrderByDescending(d => d.Value.LevelName).ToList();
+            case LevelBrowserEditorSortCategory.Online:
                 if (_currentSortType == LevelBrowserSortType.Ascending)
                 {
-                    downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                    return ownlevels.OrderBy(d => d.Value.LevelName).ToList();
+                    return StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList().OrderBy(d => d.Value.Online).ToList();
                 }
-                downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                return ownlevels.OrderByDescending(d => d.Value.LevelName).ToList();
-            case LevelBrowserPlaySortCategory.OwnDownloaded:
-                if (_currentSortType == LevelBrowserSortType.Ascending)
-                {
-                    downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                    return ownlevels.ToList();
-                }
-                ownlevels.ToList().ForEach(x => downloadedLevels[x.Key] = x.Value);
-                return downloadedLevels.ToList();
-            case LevelBrowserPlaySortCategory.Played:
-                if (_currentSortType == LevelBrowserSortType.Ascending)
-                {
-                    downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                    return ownlevels.OrderBy(d => d.Value.Played).ToList();
-                }
-                downloadedLevels.ToList().ForEach(x => ownlevels[x.Key] = x.Value);
-                return ownlevels.OrderByDescending(d => d.Value.Played).ToList();
+                return StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList().OrderByDescending(d => d.Value.Online).ToList();
         }
         return null;
     }
@@ -131,7 +101,7 @@ public class WorkshopPlayLevelBrowser : Singleton<WorkshopPlayLevelBrowser> {
 
     public void SortCategoryDropdownChanged(int value)
     {
-        LevelBrowserPlaySortCategory newSortCategory = (LevelBrowserPlaySortCategory)value;
+        LevelBrowserEditorSortCategory newSortCategory = (LevelBrowserEditorSortCategory)value;
         if (_currentSortCategory == newSortCategory)
         {
             _currentSortType = _currentSortType == LevelBrowserSortType.Ascending ? LevelBrowserSortType.Descending : LevelBrowserSortType.Ascending;
@@ -145,17 +115,12 @@ public class WorkshopPlayLevelBrowser : Singleton<WorkshopPlayLevelBrowser> {
         Refresh();
     }
 
-    public void BackToWorkshop()
-    {
-        GameManager.Instance.ShowWorkshop();
-    }
-
     public void SetSortType(LevelBrowserSortType sortType)
     {
         _currentSortType = sortType;
     }
 
-    public void SetSortCategory(LevelBrowserPlaySortCategory sortCategory)
+    public void SetSortCategory(LevelBrowserEditorSortCategory sortCategory)
     {
         _currentSortCategory = sortCategory;
     }
@@ -170,11 +135,9 @@ public class WorkshopPlayLevelBrowser : Singleton<WorkshopPlayLevelBrowser> {
 }
 
 
-public enum LevelBrowserPlaySortCategory
+public enum LevelBrowserEditorSortCategory
 {
-    AuthorName,
-    LevelName,
-    Played,
     Date,
-    OwnDownloaded,
-}//Datum, OwnDownloaded, Gespielt
+    LevelName,
+    Online,
+}

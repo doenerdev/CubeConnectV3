@@ -94,6 +94,7 @@ public partial class Cube : Singleton<Cube>
             switch (GameManager.Instance.GameState) //check the current game state
             {
                 case GameState.CubeGameplay:
+                case GameState.WorkshopCubeGameplay:
                 case GameState.LevelEditor:
                 case GameState.LevelEditorUser:
                     Quaternion targetSideRotation = _cube._currentActiveSide.Rotation;
