@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using ProtoBuf;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 [Serializable]
@@ -88,6 +89,16 @@ public class UserGeneratedLevelData : LevelData
         _levelID = levelID;
     }
 
+    public void SetAuthorName(string authorName)
+    {
+        _authorName = authorName;
+    }
+
+    public void SetAuthorID(string authorID)
+    {
+        _authorID = authorID;
+    }
+
     public void SyncWithLevelInfo(UserGeneratedLevelInfo levelInfo)
     {
         _authorName = levelInfo.AuthorName;
@@ -99,5 +110,52 @@ public class UserGeneratedLevelData : LevelData
         _qtyDownloads = levelInfo.QtyDownloads;
         _fileLocation = levelInfo.FileLocation;
         _date = levelInfo.Date;
+    }
+
+    public CubeMapGridInfo[] CreateCubeMapCopy()
+    {
+        byte[] cubeMapBytes = HelperFunctions.ToByteArray(_cubeMap);
+        CubeMapGridInfo[] copy = HelperFunctions.FromByteArray<CubeMapGridInfo>(cubeMapBytes);
+        return copy;
+    }
+}
+
+
+public class HelperFunctions
+{
+    public static byte[] ToByteArray<T>(T[] source) where T : struct
+    {
+        GCHandle handle = GCHandle.Alloc(source, GCHandleType.Pinned);
+        try
+        {
+            IntPtr pointer = handle.AddrOfPinnedObject();
+            byte[] destination = new byte[source.Length * Marshal.SizeOf(typeof(T))];
+            Marshal.Copy(pointer, destination, 0, destination.Length);
+            return destination;
+
+        }
+
+        finally
+        {
+            if (handle.IsAllocated)
+                handle.Free();
+        }
+    }
+
+    public static T[] FromByteArray<T>(byte[] source) where T : struct
+    {
+        T[] destination = new T[source.Length / Marshal.SizeOf(typeof(T))];
+        GCHandle handle = GCHandle.Alloc(destination, GCHandleType.Pinned);
+        try
+        {
+            IntPtr pointer = handle.AddrOfPinnedObject();
+            Marshal.Copy(source, 0, pointer, source.Length);
+            return destination;
+        }
+        finally
+        {
+            if (handle.IsAllocated)
+                handle.Free();
+        }
     }
 }

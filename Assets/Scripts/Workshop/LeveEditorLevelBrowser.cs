@@ -18,6 +18,11 @@ public class LeveEditorLevelBrowser : MonoBehaviour {
 
     public Text errorText;
 
+
+    public Canvas Canvas
+    {
+       get { return GetComponent<Canvas>(); }  
+    }
     public LevelBrowserEditorSortCategory CurrentSortCategory
     {
         get { return _currentSortCategory; }

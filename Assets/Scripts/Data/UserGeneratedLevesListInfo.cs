@@ -57,4 +57,13 @@ public class UserGeneratedLevelInfo
     public bool Played;
     [ProtoMember(16)]
     public long LocalDate;
+
+    public UserGeneratedLevelInfo() {}
+
+    public UserGeneratedLevelInfo(string authorName, string authorID, string levelName)
+    {
+        AuthorName = authorName;
+        AuthorID = authorID;
+        LevelName = levelName;
+    }
 }

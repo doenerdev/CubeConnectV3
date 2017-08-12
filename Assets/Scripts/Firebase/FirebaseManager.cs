@@ -163,6 +163,14 @@ public class FirebaseManager : Singleton<FirebaseManager>
         GenerateUniqueLevelID(levelData, levelInfo, UploadUserGeneratedLevel);
     }
 
+    public void UploadUserGeneratedLevel(UserGeneratedLevelInfo levelInfo)
+    {
+        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelAsync(levelInfo.FileLocation, (levelData) =>
+        {
+            GenerateUniqueLevelID(levelData, levelInfo, UploadUserGeneratedLevel);
+        });
+    }
+
     private void UploadUserGeneratedLevel(UserGeneratedLevelData levelData, UserGeneratedLevelInfo levelInfo, string levelcode)
     {
         byte[] custom_bytes = null;

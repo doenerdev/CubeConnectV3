@@ -11,7 +11,6 @@ public class LevelEditorUser : LevelEditor {
     private UserGeneratedLevelData _currentlySelectedLevelData;
     private UserGeneratedLevelInfo _currentlySelectedLevelInfo;
 
-    [SerializeField] private LevelEditorUserLevelSelection _levelEditorLevelSelection;
     [SerializeField] private LevelEditorEditLevelUser _levelEditorEditLevelUser;
     [SerializeField] private LeveEditorLevelBrowser _levelBrowser;
 
@@ -38,20 +37,12 @@ public class LevelEditorUser : LevelEditor {
     {
         //StageAndLevelDataManager.Instance.LoadingUserGeneratedLevelDataHolderComplete += new EventHandler<EventTextArgs>(LoadedUserGeneratedLevelDataHolder);
         //StageAndLevelDataManager.Instance.LoadUserGeneratedLevelDataHolderAsync(GameManager.Instance.UserLevelsDataPath);
-
-        _levelEditorLevelSelection.LoadLevelsIntoScrollView(StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList());
     }
 
-    private void LoadedUserGeneratedLevelDataHolder(object sender, EventTextArgs args)
-    {
-        _levelEditorLevelSelection.LoadLevelsIntoScrollView(StageAndLevelDataManager.Instance.GetOwnUserGeneratedLevelInfosList());
-        Debug.Log("Loaded User generated Levels");
-    }
 
     public void CreateNewLevel()
     {
         _currentlySelectedLevelInfo = new UserGeneratedLevelInfo();
-        _levelEditorLevelSelection.gameObject.SetActive(false);
         _levelEditorEditLevelUser.ShowEditOptions("Unnamed");
     }
 
@@ -63,16 +54,45 @@ public class LevelEditorUser : LevelEditor {
     public void LevelSelected(string levelCode)
     {
         _currentlySelectedLevelInfo = StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfoByLevelcode(levelCode);
-        _levelEditorLevelSelection.gameObject.SetActive(false);
-        _levelEditorEditLevelUser.ShowEditOptions(_currentlySelectedLevelInfo.LevelName);
+        ShowLoadingOverlay();
+        _levelBrowser.Canvas.enabled = false;
+
+        UserGeneratedLevelData level = null;
+        if (String.IsNullOrEmpty(_currentlySelectedLevelInfo.LevelCode) == false)
+        {
+            if (_currentlySelectedLevelInfo.Online == true) //if the level is already online, create a copy of it
+            {
+                StartCoroutine(CopyAndShowCurrentlySelectedCubeLevel());
+            }
+            else
+            {
+                LoadAndShowCurrentlySelectedCubeLevel();
+            }
+        }
+        else
+        {
+            _currentlySelectedLevelInfo.LevelName = "Unnamed";
+            if (Application.isEditor == false)
+            {
+                _currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.DESKTOP_USER_ID;
+                _currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.DESKTOP_USER_USERNAME;
+                //_currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.Instance.CurrentUserInfo.Username; //TODO CHANGE THIS LATER
+                //_currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.Instance.CurrentUserInfo.UserID;
+            }
+            else
+            {
+                _currentlySelectedLevelInfo.AuthorID = FirebaseAuthentication.DESKTOP_USER_ID;
+                _currentlySelectedLevelInfo.AuthorName = FirebaseAuthentication.DESKTOP_USER_USERNAME;
+            }
+
+            StartCoroutine(CreateAndShowCurrentlySelectedCubeLevel());
+        }
     }
 
     public void LevelEdited(string newLevelName)
     {
         //TODO show loading screen
         ShowLoadingOverlay();
-
-        Dictionary<string, UserGeneratedLevelInfo> levelInfos = StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList();
         _currentlySelectedLevelInfo.LevelName = newLevelName;
 
         UserGeneratedLevelData level = null;
@@ -123,6 +143,24 @@ public class LevelEditorUser : LevelEditor {
         ShowCubeLevel(_currentlySelectedLevelData);
     }
 
+    private IEnumerator CopyAndShowCurrentlySelectedCubeLevel()
+    {
+        UserGeneratedLevelInfo copyLevelInfo = new UserGeneratedLevelInfo(_currentlySelectedLevelInfo.AuthorName + "_Copy", _currentlySelectedLevelInfo.AuthorID, _currentlySelectedLevelInfo.LevelName + "_Copy");
+        yield return StartCoroutine(GenerateTemporaryLocalLevelcode(copyLevelInfo));
+
+        StageAndLevelDataManager.Instance.LoadUserGeneratedLevelAsync(_currentlySelectedLevelInfo.FileLocation, (levelData) =>
+        {
+            _currentlySelectedLevelInfo = copyLevelInfo;
+            _currentlySelectedLevelData = new UserGeneratedLevelData(levelData.GridSize);
+            _currentlySelectedLevelData.CubeMap = levelData.CreateCubeMapCopy();
+            _currentlySelectedLevelData.SyncWithLevelInfo(copyLevelInfo);
+            _levelEditorEditLevelUser.gameObject.SetActive(false);
+            StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList().Add(_currentlySelectedLevelInfo.LevelCode, _currentlySelectedLevelInfo);
+            HideLoadingOverlay();
+            ShowCubeLevel(_currentlySelectedLevelData);
+        });
+    }
+
     private IEnumerator GenerateTemporaryLocalLevelcode(UserGeneratedLevelInfo levelInfo)
     {
         bool generatedUID = false;
@@ -155,18 +193,17 @@ public class LevelEditorUser : LevelEditor {
 
     public void ShowLevelSelection()
     {
+        _levelBrowser.Canvas.enabled = true;
+        _levelBrowser.Refresh();
         Dictionary<string, UserGeneratedLevelInfo> levelInfos = StageAndLevelDataManager.Instance.GetUserGeneratedLevelInfosList();
-        _levelEditorLevelSelection.LoadLevelsIntoScrollView(levelInfos);
 
         _levelEditorEditLevelUser.gameObject.SetActive(false);
         _levelDetailControls.SetActive(false);
         HideCubeLevel();
-        _levelEditorLevelSelection.gameObject.SetActive(true);
     }
 
     public override void ShowCubeLevel(LevelData levelData)
     {
-        _levelEditorLevelSelection.gameObject.SetActive(false);
         base.ShowCubeLevel(levelData);
     }
 
@@ -190,9 +227,9 @@ public class LevelEditorUser : LevelEditor {
             });
     }
 
-    public void UploadLevel(UserGeneratedLevelData levelData)
+    public void UploadLevel(UserGeneratedLevelInfo levelInfo)
     {
-        //FirebaseManager.Instance.UploadUserGeneratedLevel(levelData, level);
+        FirebaseManager.Instance.UploadUserGeneratedLevel(levelInfo);
     }
 
     public void BackToWorkshop()
