@@ -247,6 +247,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
             {
                 if (stageAndLevelData != null)
                 {
+                    Debug.Log("Loaded Stage and Level Data");
                     _stageAndLevelData = stageAndLevelData;
                 }
                 if (userGeneratedLevelInfoHolder != null)

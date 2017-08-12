@@ -88,6 +88,7 @@ public class LevelEditorProduction : LevelEditor
         StageAndLevelDataManager.Instance.SaveLevelAndStageData();
 
         _levelEditorEditStage.gameObject.SetActive(false);
+        _levelEditorStageSelection.gameObject.SetActive(false);
         _levelEditorLevelSelection.gameObject.SetActive(true);
         _levelEditorLevelSelection.LoadLevelsIntoScrollView(newStageIndex, StageAndLevelDataManager.Instance.GetStages()[oldStageIndex].Levels);
     }
@@ -134,7 +135,9 @@ public class LevelEditorProduction : LevelEditor
 
         StageAndLevelDataManager.Instance.AddLevelAt(stageIndex, newLevelIndex, level);
         StageAndLevelDataManager.Instance.SaveLevelAndStageData();
+        _levelEditorLevelSelection.gameObject.SetActive(false);
         _levelEditorEditLevel.gameObject.SetActive(false);
+        _levelEditorStageSelection.gameObject.SetActive(false);
         ShowCubeLevel(levels[newLevelIndex]);
     }
 
