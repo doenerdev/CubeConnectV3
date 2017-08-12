@@ -56,13 +56,13 @@ public class CubeGameplay : Singleton<CubeGameplay>
 
     public IEnumerator PlayLevelTransitionAnimationIn()
     {
-        PlayManager.Instance.LevelTransitionAnimator.SetTrigger("AnimIn");
+        PlayManager.Instance.LevelCompletedCanvas.PlayLevelCompleteAnimationIn((PlayManager.Instance.Moves - Cube.Instance.NecessaryConnectionsToWin), PlayManager.Instance.Unfolds, PlayManager.Instance.CalculateCurrentLevelRating());
         yield return new WaitForSeconds(2);
     }
 
     public IEnumerator PlayLevelTransitionAnimationOut()
     {
-        PlayManager.Instance.LevelTransitionAnimator.SetTrigger("AnimOut");
+        PlayManager.Instance.LevelCompletedCanvas.PlayLevelCompleteAnimationOut();
         yield return null;
     }
 

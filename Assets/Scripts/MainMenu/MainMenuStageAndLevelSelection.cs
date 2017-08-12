@@ -53,7 +53,8 @@ public class MainMenuStageAndLevelSelection : MonoBehaviour
     }
 
     public void HomeButtonClicked()
-    {
+    {   
+        Debug.Log("Show Main Menu Clicked");
         GameManager.Instance.ShowMainMenu();
     }
 

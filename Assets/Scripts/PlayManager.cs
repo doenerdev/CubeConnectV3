@@ -7,20 +7,13 @@ public class PlayManager : Singleton<PlayManager>
 {
 
     private int _moves; //the overall quantity of moves the player made (including reversed moves)
+    private int _unfolds; //the overall quantity of unfolds initiated by the player
 
     [SerializeField] private Text _textQtyCurrentConnections;
     [SerializeField] private Text _textQtyMaxConnections;
     [SerializeField] private Animator _levelTransitionAnimator;
+    [SerializeField] private LevelCompletedCanvas _levelCompletedCanvas;
 
-    public int MaxMoves
-    {
-        set
-        {
-            _moves = value;
-            //_textQtyCurrentConnections.text = _moves.ToString();
-        }
-        get { return _moves; }
-    }
     public int Moves
     {
         set {
@@ -30,12 +23,16 @@ public class PlayManager : Singleton<PlayManager>
         }
         get { return _moves; }
     }
+    public int Unfolds
+    {
+        get { return _unfolds; }
+    }
 
-    public Animator LevelTransitionAnimator
+    public LevelCompletedCanvas LevelCompletedCanvas
     {
         get
         {
-            return _levelTransitionAnimator;
+            return _levelCompletedCanvas;
         }
     }
 
@@ -158,10 +155,11 @@ public class PlayManager : Singleton<PlayManager>
             StageAndLevelDataManager.Instance.SaveLevelAndStageData();
     }
 
-    private uint CalculateCurrentLevelRating()
+    public uint CalculateCurrentLevelRating()
     {
         uint rating = 1;
         float moveExcessPercentage = (float) _moves/Cube.Instance.NecessaryConnectionsToWin - 1f;
+        //moveExcessPercentage += 0.15f * _unfolds;
 
         if (moveExcessPercentage < 0.15f)
         {
@@ -187,6 +185,7 @@ public class PlayManager : Singleton<PlayManager>
     {
         if (Cube.Instance.CurrentCubeStateID == CubeStateID.CubeStateFolded || Cube.Instance.CurrentCubeStateID == CubeStateID.CubeStateLaymap)
         {
+            if (Cube.Instance.CurrentCubeStateID == CubeStateID.CubeStateFolded) _unfolds++;
             Cube.Instance.ChangeState(CubeStateID.CubeStateFoldingTransition);
         }
     }

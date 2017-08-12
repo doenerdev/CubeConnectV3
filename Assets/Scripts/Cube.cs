@@ -147,7 +147,6 @@ public partial class Cube : Singleton<Cube>
             GridFieldConnection lastConnection = _connections[_connections.Count - 1];
             bool unrestrictedRevertRotation = lastConnection.Target.ConnectionState == GridFieldConnectionState.PortalConnection ? false : true;
 
-            Debug.Log(lastConnection.ValidGridFields.Count);
             for (int i = lastConnection.ValidGridFields.Count-1; i > 0; i--) //don't include the origin gridfield
             {
                 lastConnection.ValidGridFields[i].SetConnectionState(lastConnection.ValidGridFields[i].GetAppropriateTargetGridFieldConnectionState(GridFieldConnectionState.Empty));
@@ -167,7 +166,6 @@ public partial class Cube : Singleton<Cube>
             else
             {
                 CubeSide originCubeSide = _selectedGridField.CubeSide;
-                Debug.Log(lastConnection.Target.ConnectionState);
                 lastConnection.Origin.SetConnectionState(lastConnection.Origin.GetAppropriateTargetGridFieldConnectionState(GridFieldConnectionState.Empty));
                 lastConnection.Origin.SetSelected(false, true);
                 _selectedGridField = null;
