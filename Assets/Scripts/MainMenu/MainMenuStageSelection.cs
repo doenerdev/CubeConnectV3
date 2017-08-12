@@ -53,7 +53,7 @@ public class MainMenuStageSelection : MonoBehaviour
     public void SetStageIndexAndPosition(int index)
     {
         _stageIndex = index;
-        _rectTransform.anchoredPosition = new Vector2(index * _rectTransform.sizeDelta.x * _rectTransform.localScale.x, 0f);
+        _rectTransform.anchoredPosition = new Vector2(index * _rectTransform.sizeDelta.x * _rectTransform.localScale.x, transform.parent.GetComponent<RectTransform>().anchoredPosition.y);
     }
 
     public void SetName(int index)
