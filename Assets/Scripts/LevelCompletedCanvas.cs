@@ -13,6 +13,8 @@ public class LevelCompletedCanvas : MonoBehaviour
     [SerializeField] private Text _qtyRedosText;
     [SerializeField] private Text _qtyUnfoldsText;
 
+    public Text errorText;
+
     public void PlayLevelCompleteAnimationIn(int qtyRedos, int qtyUnfolds, uint rating)
     {
         Debug.Log("PlayLevel Completed");

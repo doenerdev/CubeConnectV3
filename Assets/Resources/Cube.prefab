@@ -707,5 +707,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86b7fce5a010ef44990289171735e2f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rotationRate: 0.45
-  _animationEasing: 9
+  _rotationRate: 0.47
+  _animationEasing: 10

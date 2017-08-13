@@ -14,6 +14,8 @@ public class PlayManager : Singleton<PlayManager>
     [SerializeField] private Animator _levelTransitionAnimator;
     [SerializeField] private LevelCompletedCanvas _levelCompletedCanvas;
 
+    public Text errorText;
+
     public int Moves
     {
         set {
@@ -56,14 +58,11 @@ public class PlayManager : Singleton<PlayManager>
                 //win condition reached, do something (e.g. play animation, show rating stars etc...)
                 bool loadNextLevel = true;
 
-                if (
-                    StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex).Levels.Count - 1 > PersistentSceneData.CurrentLevelIndex)
-                    //check whether this was the last level in the current stage
+                if (StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex).Levels.Count - 1 > PersistentSceneData.CurrentLevelIndex) //check whether this was the last level in the current stage
                 {
                     PersistentSceneData.CurrentLevelIndex++;
                 }
-                else if (StageAndLevelDataManager.Instance.GetStages().Count - 1 > PersistentSceneData.CurrentStageIndex && StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex + 1).Levels.Count > 0)
-                    //check if this is the last available stage
+                else if (StageAndLevelDataManager.Instance.GetStages().Count - 1 > PersistentSceneData.CurrentStageIndex && StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex + 1).Levels.Count > 0) //check if this is the last available stage
                 {
                     PersistentSceneData.CurrentStageIndex++;
                     PersistentSceneData.CurrentLevelIndex = 0;
@@ -128,19 +127,20 @@ public class PlayManager : Singleton<PlayManager>
         if (GameManager.Instance.Nutzertest == false) //TODO remove later
             PersistentSceneData.MainMenu.StageAndLevelSelection.Stages[PersistentSceneData.CurrentStageIndex].LevelTiles[PersistentSceneData.CurrentLevelIndex].UpdateStatus(LevelStatus.Finished, CalculateCurrentLevelRating());
 
-        if (StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex).Levels.Count - 1 > PersistentSceneData.CurrentLevelIndex)
-        //check whether this was the last level in the current stage
-        {
+        if (StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex).Levels.Count - 1 > PersistentSceneData.CurrentLevelIndex) 
+            //check if there are more leves or whether this was the last level in the current stage
+        {       
             LevelData nextLevelData = StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex).Levels[PersistentSceneData.CurrentLevelIndex + 1];
             if (nextLevelData.LevelStatus == LevelStatus.Locked)
             {
                 nextLevelData.SetLevelStatus(LevelStatus.Unlocked);
+
                 if (GameManager.Instance.Nutzertest == false) //TODO remove later
                     PersistentSceneData.MainMenu.StageAndLevelSelection.Stages[PersistentSceneData.CurrentStageIndex].LevelTiles[PersistentSceneData.CurrentLevelIndex + 1].UpdateStatus(nextLevelData.LevelStatus, nextLevelData.Rating);
             }
         }
         else if (StageAndLevelDataManager.Instance.GetStages().Count - 1 > PersistentSceneData.CurrentStageIndex && StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex + 1).Levels.Count > 0)
-        //check if this is the last available stage
+        //check if there are more stages or if this is the last available stage
         {
             LevelData nextLevelData = StageAndLevelDataManager.Instance.GetStageDataByIndex(PersistentSceneData.CurrentStageIndex + 1).Levels[0];
             if (nextLevelData.LevelStatus == LevelStatus.Locked)
@@ -159,7 +159,7 @@ public class PlayManager : Singleton<PlayManager>
     {
         uint rating = 1;
         float moveExcessPercentage = (float) _moves/Cube.Instance.NecessaryConnectionsToWin - 1f;
-        //moveExcessPercentage += 0.15f * _unfolds;
+        moveExcessPercentage += 0.15f * _unfolds;
 
         if (moveExcessPercentage < 0.15f)
         {

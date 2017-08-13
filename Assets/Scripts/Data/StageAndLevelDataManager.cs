@@ -164,7 +164,7 @@ public class StageAndLevelDataManager : Singleton<StageAndLevelDataManager>
         });
     }
 
-    public void SaveLevelAndStageData()
+    public void SaveLevelAndStageData() //TODO saving to streaming assets is not poosible on android, copy all the production levels to a persistent data path instead when starting the game
     {
         FileStream stream = new FileStream(GameManager.Instance.ProductionLevelsDataPath.Replace("file:///", ""), FileMode.Create);
         ProtoBuf.Serializer.Serialize(stream, _stageAndLevelData);

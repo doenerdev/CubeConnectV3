@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading.Tasks;
+using GoogleMobileAds.Api;
 using TagFrenzy;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,6 +47,35 @@ public class GameManager : Singleton<GameManager>
     public string DownloadedUserLevelsDataPath
     {
         get { return _downloadedUserLevelsDataPath; }
+    }
+
+    private void RequestInterstitial()
+    {
+        string adID = "ca-app-pub-3831297863907628/8265838532";
+        AndroidJavaClass up = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+        AndroidJavaObject currentActivity = up.GetStatic<AndroidJavaObject>("currentActivity");
+        AndroidJavaObject contentResolver = currentActivity.Call<AndroidJavaObject>("getContentResolver");
+        AndroidJavaClass secure = new AndroidJavaClass("android.provider.Settings$Secure");
+        string android_id = secure.CallStatic<string>("getString", contentResolver, "android_id");
+
+        AdRequest request = new AdRequest.Builder()
+            .AddTestDevice(AdRequest.TestDeviceSimulator)
+            .AddTestDevice(android_id)
+            .Build();
+
+        // Initialize an InterstitialAd.
+        InterstitialAd interstitial = new InterstitialAd(adID);
+        // Create an empty ad request.
+        interstitial.LoadAd(request);
+        interstitial.OnAdFailedToLoad += (sender, args) =>
+        {
+            Debug.Log("Failed:" + args.Message);
+        };
+        interstitial.OnAdLoaded += (sender, args) =>
+        {
+            Debug.Log("Show Ad");
+            interstitial.Show();
+        };
     }
 
     protected void Awake()
@@ -135,6 +165,7 @@ public class GameManager : Singleton<GameManager>
         }
         else
         {
+            PlayManager.Instance.errorText.text = "Load Next Level";
             PersistentSceneData.CurrentStageIndex = stageIndex;
             PersistentSceneData.CurrentLevelIndex = levelIndex;
             CubeGameplay.Instance.NextLevel();
@@ -186,6 +217,7 @@ public class GameManager : Singleton<GameManager>
 
     public void ShowStageAndLevelSelection()
     {
+        //RequestInterstitial();
         _gameState = GameState.MainMenuStageAndLevelSelection;
         CubeSceneManager.Instance.ShowStageAndLevelSelection();
     }

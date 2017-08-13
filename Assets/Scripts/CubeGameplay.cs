@@ -2,12 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using TagFrenzy;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CubeGameplay : Singleton<CubeGameplay>
 {
 
     private CameraRotation _cubeCameraRotation;
     private CubeRotation _cubeRotation;
+
+    public Text errorText;
 
     public CameraRotation CubeCameraRotation
     {
@@ -51,11 +54,13 @@ public class CubeGameplay : Singleton<CubeGameplay>
 
     public void NextLevel()
     {
+        errorText.text = "Next Level...";
         StartCoroutine(InitializeNextLevel());
     }
 
     public IEnumerator PlayLevelTransitionAnimationIn()
     {
+        errorText.text = "Prepare Trans Anim...";
         PlayManager.Instance.LevelCompletedCanvas.PlayLevelCompleteAnimationIn((PlayManager.Instance.Moves - Cube.Instance.NecessaryConnectionsToWin), PlayManager.Instance.Unfolds, PlayManager.Instance.CalculateCurrentLevelRating());
         yield return new WaitForSeconds(2);
     }
